@@ -1,0 +1,26 @@
+CORTA STUDIO — Código-fonte
+
+Cópia dos ficheiros da atualização publicada em 14/09/2026.
+
+CONTEÚDO
+index.html — Interface do editor.
+style.css — Estilos.
+app.js — Edição, reprodução, cortes, música e títulos.
+export-ui.js — Opções de exportação, gravação e janelas de visualização.
+export-engine.mjs — Exportação MP4/WebM, a 30 ou 60 fps.
+vendor/ — Biblioteca Mediabunny e respetiva licença.
+
+COMO ABRIR NO COMPUTADOR
+1. Extrai o ZIP para uma pasta.
+2. Serve essa pasta através de um servidor local. Não abras apenas o index.html com duplo clique: a exportação utiliza módulos JavaScript.
+3. Se tiveres Python instalado, abre um terminal na pasta que contém index.html e executa:
+   python -m http.server 8000 --bind 127.0.0.1
+4. Abre http://localhost:8000 no Chrome ou Edge.
+5. Para encerrar o servidor, prime Ctrl+C no terminal.
+
+Também podes usar o Live Server do VS Code para servir a pasta.
+
+Não é necessário instalar pacotes npm nem compilar. Mantém os ficheiros e a pasta vendor juntos. Para alojamento remoto, utiliza HTTPS.
+A disponibilidade de MP4 e da escolha direta do destino depende das capacidades do navegador.
+Os vídeos importados ficam no dispositivo; não estão incluídos neste ZIP.
+As definições de acesso do site alojado no ChatGPT não fazem parte desta cópia independente.
