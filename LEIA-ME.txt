@@ -1,26 +1,47 @@
-CORTA STUDIO — Código-fonte
+CORTA STUDIO — Atualização de formatos
 
-Cópia dos ficheiros da atualização publicada em 14/09/2026.
+Esta atualização acrescenta apenas a escolha das proporções do vídeo:
+16:9, 9:16, 1:1, 4:5, 4:3 e 3:4.
 
-CONTEÚDO
-index.html — Interface do editor.
-style.css — Estilos.
-app.js — Edição, reprodução, cortes, música e títulos.
-export-ui.js — Opções de exportação, gravação e janelas de visualização.
-export-engine.mjs — Exportação MP4/WebM, a 30 ou 60 fps.
-vendor/ — Biblioteca Mediabunny e respetiva licença.
+INSTALAÇÃO
+1. Guarda uma cópia do teu export-ui.js atual.
+2. Copia video-formats.js e export-ui.js deste ZIP para a pasta do editor,
+   junto de index.html. Substitui o export-ui.js existente.
+3. No final do index.html, acrescenta esta linha depois dos outros scripts:
 
-COMO ABRIR NO COMPUTADOR
-1. Extrai o ZIP para uma pasta.
-2. Serve essa pasta através de um servidor local. Não abras apenas o index.html com duplo clique: a exportação utiliza módulos JavaScript.
-3. Se tiveres Python instalado, abre um terminal na pasta que contém index.html e executa:
-   python -m http.server 8000 --bind 127.0.0.1
-4. Abre http://localhost:8000 no Chrome ou Edge.
-5. Para encerrar o servidor, prime Ctrl+C no terminal.
+   <script src="video-formats.js"></script>
 
-Também podes usar o Live Server do VS Code para servir a pasta.
+   Se utilizares o complemento editor-upgrade.js, a ordem fica:
 
-Não é necessário instalar pacotes npm nem compilar. Mantém os ficheiros e a pasta vendor juntos. Para alojamento remoto, utiliza HTTPS.
-A disponibilidade de MP4 e da escolha direta do destino depende das capacidades do navegador.
-Os vídeos importados ficam no dispositivo; não estão incluídos neste ZIP.
-As definições de acesso do site alojado no ChatGPT não fazem parte desta cópia independente.
+   <script src="app.js"></script>
+   <script src="export-ui.js"></script>
+   <script src="editor-upgrade.js"></script>
+   <script src="video-formats.js"></script>
+
+   Se não tiveres editor-upgrade.js, omite apenas essa linha.
+4. Atualiza a página com Ctrl+F5.
+
+Não substituas app.js, style.css, export-engine.mjs nem a pasta vendor.
+As alterações desta atualização não foram publicadas no GitHub ou no site.
+
+UTILIZAÇÃO
+Escolhe «Formato do vídeo», acima da pré-visualização.
+A janela de exportação apresenta as dimensões correspondentes à proporção.
+Exemplos na resolução intermédia:
+16:9 — 1920 × 1080
+9:16 — 1080 × 1920
+1:1  — 1080 × 1080
+4:5  — 1080 × 1350
+4:3  — 1440 × 1080
+3:4  — 1080 × 1440
+
+O vídeo original é ajustado integralmente ao novo formato, sem deformação.
+Podem existir margens quando a proporção do original é diferente da escolhida.
+As opções MP4/WebM e 30/60 fps continuam disponíveis.
+O formato escolhido aplica-se a todo o projeto. Os botões Desfazer/Limpar do
+complemento anterior não modificam a escolha deste novo seletor.
+
+VALIDAÇÃO
+Verificadas a sintaxe e as dimensões transmitidas à exportação, incluindo
+bloqueio da mudança de formato durante a exportação, com simulação de interface.
+Não foi realizada uma exportação de vídeo real num navegador nesta atualização.
