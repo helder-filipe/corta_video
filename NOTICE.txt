@@ -1,0 +1,4 @@
+Mediabunny 1.56.2 — Copyright (c) Vanilagy and contributors.
+Unmodified npm browser bundle, licensed under MPL-2.0 (see MEDIABUNNY-LICENSE.txt).
+Corresponding source: https://registry.npmjs.org/mediabunny/-/mediabunny-1.56.2.tgz (src/ directory).
+Project: https://github.com/Vanilagy/mediabunny
