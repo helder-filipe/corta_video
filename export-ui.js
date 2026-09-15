@@ -120,3 +120,4 @@ $('render').onclick = async () => {
     time = oldTime; draw();
   }
 };
+

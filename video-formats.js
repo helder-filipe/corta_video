@@ -89,11 +89,14 @@
   select.addEventListener('change', () => {
     if (exporting || busy) { select.value = selected[0]; return; }
     pause();
+    window.CortaEditor?.record('alterar formato');
     selected = options.find(item => item[0] === select.value) || options[0];
     applyRatio();
     status('Formato alterado para ' + selected[0] + '. A exportação utilizará estas proporções.');
   });
   resolution.addEventListener('change', labels);
-  window.CortaFormats = Object.freeze({ exportSize, get ratio() { return selected[0]; } });
+  window.CortaFormats = Object.freeze({ exportSize, get ratio() { return selected[0]; },
+    setRatio(value) { selected = options.find(item => item[0] === value) || options[0]; select.value = selected[0]; applyRatio(); }
+  });
   applyRatio();
 })();

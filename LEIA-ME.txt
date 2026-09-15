@@ -1,47 +1,77 @@
-CORTA STUDIO — Atualização de formatos
+CORTA STUDIO — PROJETOS E LINHA DE TEMPO
 
-Esta atualização acrescenta apenas a escolha das proporções do vídeo:
-16:9, 9:16, 1:1, 4:5, 4:3 e 3:4.
+INSTALAR
+Esta pasta contém a aplicação completa, incluindo a pasta vendor.
+Faz uma cópia da tua versão atual e substitui os ficheiros da aplicação pelos
+desta pasta. Mantém os nomes e a estrutura. O index.html já carrega todos os
+scripts necessários. Não é necessário juntar manualmente os patches anteriores.
 
-INSTALAÇÃO
-1. Guarda uma cópia do teu export-ui.js atual.
-2. Copia video-formats.js e export-ui.js deste ZIP para a pasta do editor,
-   junto de index.html. Substitui o export-ui.js existente.
-3. No final do index.html, acrescenta esta linha depois dos outros scripts:
+Serve esta pasta num servidor HTTP/HTTPS, tal como a versão que já usas.
+Para testar no computador com Python instalado, abre um terminal nesta pasta,
+executa: python -m http.server 8000
+Depois abre http://localhost:8000 no navegador.
+Abrir index.html por duplo clique (file://) não é suportado: o navegador pode
+bloquear os módulos de exportação e de projetos.
 
-   <script src="video-formats.js"></script>
+GUARDAR E ABRIR PROJETOS
+1. Usa «Guardar projeto», na barra superior.
+2. O navegador transfere um ficheiro .corta. A pasta de destino depende das
+   definições de transferências do navegador.
+3. Usa «Abrir projeto» para continuar a edição a partir desse ficheiro.
 
-   Se utilizares o complemento editor-upgrade.js, a ordem fica:
+O projeto inclui os vídeos originais, a música adicional, os cortes, a ordem,
+os volumes, o texto e a sua formatação, a proporção do vídeo, as opções de
+exportação, o cursor e o modo de reprodução. Clips resultantes da divisão de
+um mesmo vídeo partilham uma única cópia desse original dentro do projeto.
+As fontes importadas nesta versão são incluídas quando estão em utilização.
+Fontes do sistema são guardadas pelo nome: devem existir no computador onde
+reabres o projeto. Para transportar uma fonte, importa o respetivo ficheiro.
 
-   <script src="app.js"></script>
-   <script src="export-ui.js"></script>
-   <script src="editor-upgrade.js"></script>
-   <script src="video-formats.js"></script>
+O projeto inclui os originais completos, mesmo as partes que cortaste.
+Por isso pode ocupar bastante espaço. Guarda-o antes de fechar o separador:
+não existe gravação automática. Abrir um projeto substitui a edição atual;
+«Desfazer» permite regressar à edição anterior enquanto estiver no histórico.
+O histórico de Desfazer não fica guardado dentro do ficheiro .corta.
 
-   Se não tiveres editor-upgrade.js, omite apenas essa linha.
-4. Atualiza a página com Ctrl+F5.
+EDITAR NA LINHA DE TEMPO
+- Clica num ponto do clip e usa «Dividir aqui».
+- Arrasta a extremidade esquerda ou direita para alterar a entrada ou saída.
+  Durante o arrasto aparece o tempo proposto; o corte é aplicado ao largar.
+- Usa o zoom para trabalhar em clips curtos. A linha de tempo pode deslocar-se
+  horizontalmente. Também podes clicar na régua para posicionar o cursor.
+- Para maior precisão, escreve «Cursor (s)» e carrega em «Ir para o tempo».
+- Os campos Entrada/Saída no painel continuam disponíveis, agora com 0,001 s.
+- Com uma extremidade focada, as setas ajustam 0,001 s; Shift + seta, 0,100 s.
+- Cada corte tem uma duração mínima de 0,050 s.
+- O vídeo e o seu áudio original são cortados em conjunto.
 
-Não substituas app.js, style.css, export-engine.mjs nem a pasta vendor.
-As alterações desta atualização não foram publicadas no GitHub ou no site.
+ÁUDIO EM BAIXO
+O painel «Áudio na linha de tempo» permite regular e silenciar o som original
+do corte selecionado e a música adicional, com indicação em percentagem.
+«Repor som» recupera o volume anterior ao silêncio durante a sessão.
+Os volumes aplicam-se à reprodução, à exportação e ao projeto guardado.
+A música é adicionada no painel à direita e repete-se até ao fim do filme.
+Este painel é um misturador de volumes; não separa o áudio original do vídeo
+nem permite deslocar faixas de áudio independentemente.
 
-UTILIZAÇÃO
-Escolhe «Formato do vídeo», acima da pré-visualização.
-A janela de exportação apresenta as dimensões correspondentes à proporção.
-Exemplos na resolução intermédia:
-16:9 — 1920 × 1080
-9:16 — 1080 × 1920
-1:1  — 1080 × 1080
-4:5  — 1080 × 1350
-4:3  — 1440 × 1080
-3:4  — 1080 × 1440
+REPRODUZIR
+Escolhe «Filme completo» ou «Só o corte selecionado» no menu «Reproduzir».
+O segundo modo usa os tempos de entrada/saída do corte selecionado e para no
+seu fim. Carregar novamente em reproduzir volta ao início desse corte.
+O relógio mostra a posição no projeto em minutos:segundos.milésimos.
+Três casas decimais são milésimos de segundo (0,001 s). Os fotogramas visíveis
+continuam limitados pela cadência do vídeo; não há 1000 fotogramas por segundo.
 
-O vídeo original é ajustado integralmente ao novo formato, sem deformação.
-Podem existir margens quando a proporção do original é diferente da escolhida.
-As opções MP4/WebM e 30/60 fps continuam disponíveis.
-O formato escolhido aplica-se a todo o projeto. Os botões Desfazer/Limpar do
-complemento anterior não modificam a escolha deste novo seletor.
+EXPORTAR VÍDEO
+«Exportar vídeo» continua a produzir MP4 ou WebM a 30 ou 60 fps, com o áudio
+e o formato escolhidos. Exporta sempre o filme completo, mesmo quando estás
+a pré-visualizar apenas um corte. O ficheiro .corta é o projeto editável;
+o MP4/WebM é o vídeo final. Conserva ambos se precisares de editar mais tarde.
 
-VALIDAÇÃO
-Verificadas a sintaxe e as dimensões transmitidas à exportação, incluindo
-bloqueio da mudança de formato durante a exportação, com simulação de interface.
-Não foi realizada uma exportação de vídeo real num navegador nesta atualização.
+VERIFICAÇÃO DESTA ENTREGA
+Passaram os testes de escrita/leitura binária do projeto e os testes de
+integração dos controlos: divisão, aparagem com rato e teclado, Undo, volumes,
+silêncio, reprodução por corte/completa, tempos, reabertura e ficheiros inválidos.
+Os testes de integração simulam a reprodução e a descodificação dos ficheiros.
+O navegador de teste bloqueou o acesso ao servidor local; não foi possível
+fazer nesta sessão uma verificação visual ou exportação real com vídeo.

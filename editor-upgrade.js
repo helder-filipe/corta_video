@@ -165,6 +165,7 @@
   let generation = 0;
   let fieldGroup = null;
   let fontCounter = 0;
+  const importedFonts = new Map();
   let overflow = false;
   let mediaLibrary;
 
@@ -186,7 +187,8 @@
       selected,
       time,
       values: { ...values },
-      includeAudio: byId('includeAudio').checked
+      includeAudio: byId('includeAudio').checked,
+      settings: window.CortaTimeline?.settings()
     };
   }
 
@@ -233,6 +235,9 @@
       : 'Nada para desfazer';
 
     byId('clearEdit').disabled = blocked();
+    for (const id of ['saveProject', 'openProject', 'project']) {
+      if (byId(id)) byId(id).disabled = blocked();
+    }
     byId('export').disabled = busy || !clips.length;
   }
 
@@ -338,8 +343,9 @@
   play = async function () {
     if (blocked() || !clips.length) return;
 
-    if (time >= duration() - .001) {
-      time = 0;
+    const bounds = window.CortaTimeline?.bounds() || {start: 0, end: duration()};
+    if (time >= bounds.end - .001 || time < bounds.start) {
+      time = bounds.start;
     }
 
     const token = ++generation;
@@ -424,8 +430,8 @@
     if (clip.video.ended || clip.video.currentTime >= clip.end - .001) {
       clip.video.pause();
 
-      if (current === clips.length - 1) {
-        time = duration();
+      if (current === clips.length - 1 || window.CortaTimeline?.selectedOnly()) {
+        time = offset + clip.end - clip.start;
         draw();
         pause();
         return;
@@ -558,6 +564,7 @@
       music = previous.music ? { ...previous.music } : null;
       selected = previous.selected;
       values = { ...previous.values };
+      window.CortaTimeline?.restoreSettings(previous.settings);
 
       applyFields();
 
@@ -606,6 +613,7 @@
       time = 0;
 
       values = { ...defaults };
+      window.CortaTimeline?.restoreSettings({scope:'all',fps:'30',resolution:'1080',exportFormat:'mp4',includeAudio:true});
       applyFields();
 
       byId('includeAudio').checked = true;
@@ -902,6 +910,7 @@
 
       await face.load();
       document.fonts.add(face);
+      importedFonts.set(alias, file);
 
       addFamily(
         alias,
@@ -1182,5 +1191,23 @@
     }
   };
 
+  window.CortaEditor = {
+    record, transaction, fonts: importedFonts,
+    getValues: () => ({...values}),
+    setValues(next) {
+      values = {...defaults, ...Object.fromEntries(fieldIds.filter(id => Object.hasOwn(next, id)).map(id => [id, next[id]]))};
+      addFamily(values.fontFamily);
+      applyFields();
+    },
+    async loadFont(file) {
+      const alias = 'CortaImported' + (++fontCounter);
+      const face = new FontFace(alias, await file.arrayBuffer());
+      await face.load();
+      document.fonts.add(face);
+      importedFonts.set(alias, file);
+      addFamily(alias, file.name + ' (importada)');
+      return alias;
+    }
+  };
   render();
 })();
