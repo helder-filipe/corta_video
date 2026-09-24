@@ -75,3 +75,12 @@ silêncio, reprodução por corte/completa, tempos, reabertura e ficheiros invá
 Os testes de integração simulam a reprodução e a descodificação dos ficheiros.
 O navegador de teste bloqueou o acesso ao servidor local; não foi possível
 fazer nesta sessão uma verificação visual ou exportação real com vídeo.
+
+ÍCONES DO CORTA STUDIO
+O símbolo do cabeçalho é partilhado com o ícone do separador, o ícone da
+aplicação e o ícone de ecrã principal (Apple). Inclui SVG, ICO e PNG,
+mais manifest.webmanifest. Publica também a pasta icons e estes ficheiros.
+Os caminhos relativos permitem alojamento numa subpasta.
+Se o navegador mostrar o ícone antigo, atualiza a página e volta a abrir o
+separador. Atalhos já criados podem precisar de ser removidos e adicionados
+novamente. A disponibilização de instalação depende do navegador.
