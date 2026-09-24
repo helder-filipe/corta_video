@@ -8,7 +8,7 @@ export function frameRange(start, end, fps) {
 
 // Every output frame uses the project clock, never elapsed wall time.
 export async function exportFilm({ clips, music, musicVolume, width, height, fps, format,
-  includeAudio, writable, signal, paintText, onProgress }) {
+  includeAudio, writable, signal, paintText, paintVideoFrame, onProgress }) {
   const check = () => { if (signal.aborted) throw new DOMException('Exportação cancelada.', 'AbortError'); };
   const inputs = new Map();
   let output;
@@ -76,11 +76,15 @@ export async function exportFilm({ clips, music, musicVolume, width, height, fps
         offset += c.end - c.start;
       }
       if (music && musicVolume > 0) {
-        let at = start;
-        while (at < end - 1e-8) {
-          const loop = Math.floor((at + 1e-8) / music.end);
-          const local = Math.max(0, at - loop * music.end);
-          const span = Math.min(end - at, (loop + 1) * music.end - at);
+        const trackStart = music.timelineStart || 0, sourceSpan = music.end - music.start;
+        const trackEnd = music.loop ? total : Math.min(total, trackStart + sourceSpan);
+        let at = Math.max(start, trackStart);
+        const stopAt = Math.min(end, trackEnd);
+        while (at < stopAt - 1e-8) {
+          const elapsed = at - trackStart;
+          const localOffset = music.loop ? elapsed % sourceSpan : elapsed;
+          const local = music.start + localOffset;
+          const span = Math.min(stopAt - at, music.end - local);
           await schedule(inputs.get(music.file), local, local + span, at, musicVolume);
           at += span;
         }
@@ -91,7 +95,8 @@ export async function exportFilm({ clips, music, musicVolume, width, height, fps
     }
 
     let offset = 0, audioUntil = 0, lastUpdate = 0;
-    for (const c of clips) {
+    for (let clipIndex = 0; clipIndex < clips.length; clipIndex++) {
+      const c = clips[clipIndex];
       const end = offset + c.end - c.start;
       const [first, stop] = frameRange(offset, end, fps);
       const sink = new CanvasSink(inputs.get(c.file).video, { width, height, fit: 'contain', poolSize: 2 });
@@ -101,8 +106,7 @@ export async function exportFilm({ clips, music, musicVolume, width, height, fps
         check();
         if (!frame) throw new Error(`Falta um fotograma em «${c.name}». Ajusta o início do corte.`);
         const t = index / fps;
-        ctx.fillStyle = '#090a0b'; ctx.fillRect(0, 0, width, height);
-        ctx.drawImage(frame.canvas, 0, 0, width, height);
+        paintVideoFrame(ctx, surface, frame.canvas, clipIndex, t, clips);
         paintText(ctx, surface, t);
         await videoSource.add(t, Math.min(1 / fps, total - t));
         index++;
@@ -133,4 +137,3 @@ export async function exportFilm({ clips, music, musicVolume, width, height, fps
     for (const entry of inputs.values()) entry.input.dispose();
   }
 }
-
