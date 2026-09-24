@@ -27,10 +27,19 @@
     <div class="stage"><canvas id="canvas" width="960" height="540"></canvas><div id="empty"><div class="empty-icon">▷</div><h2>Espaço para a tua próxima história.</h2><p>Importa vídeos para começar a editar.</p><button id="start">Escolher vídeos ↗</button></div></div>
     <div class="transport"><button id="rewind" title="Voltar ao início" aria-label="Voltar ao início">↤</button><button id="play" class="play" aria-label="Reproduzir">▶</button><span id="time">00:00 / 00:00</span><span class="spacer"></span><span class="hint">Pré-visualização · 16:9</span></div>
     <div class="timeline-head"><h2>Linha de tempo</h2><div><button id="split">✂ Dividir aqui</button><button id="remove">Eliminar clip</button></div></div>
+    <p class="hint timeline-help">Arrasta as pegas nas extremidades para recortar. Clica na régua para posicionar o cursor.</p>
+    <label class="timeline-zoom">Zoom da linha de tempo <input id="timelineZoom" type="range" min="25" max="160" value="65" step="5"></label>
     <input id="seek" aria-label="Posição na linha de tempo" type="range" min="0" max="0" step="0.01" value="0">
-    <div id="timeline" class="timeline"><div class="timeline-empty">Os clips aparecem aqui, pela ordem do filme.</div></div>
-    <div class="track"><span>♫ ÁUDIO</span><div id="audio-track">Adiciona uma banda sonora no painel à direita</div></div>
-    <div class="track"><span>T TEXTO</span><div id="text-track">O teu título, no momento certo</div></div>
+    <div id="timelineScroll" class="timeline-scroll">
+      <div id="timelineContent" class="timeline-content">
+        <div id="timelineRuler" class="timeline-ruler" aria-label="Régua de tempo"></div>
+        <div id="timeline" class="timeline"><div class="timeline-empty">Os clips aparecem aqui, pela ordem do filme.</div></div>
+        <div class="track"><span>♫ ÁUDIO</span><div id="audio-track">Adiciona uma banda sonora no painel à direita</div></div>
+        <div class="track"><span>T TEXTO</span><div id="text-track">O teu título, no momento certo</div></div>
+        <div id="timelinePlayhead" class="timeline-playhead" hidden></div>
+      </div>
+    </div>
+    <p id="trimFeedback" class="hint trim-feedback" role="status">Os cortes são aplicados automaticamente.</p>
   </section>
   <aside class="inspector">
     <div class="eyebrow">AJUSTES</div>
@@ -70,7 +79,12 @@
       <textarea id="text" placeholder="Escreve o teu título…" rows="2"></textarea>
       <div class="two"><label>De (s)<input id="textStart" type="number" min="0" step="0.1" value="0"></label><label>Até (s)<input id="textEnd" type="number" min="0" step="0.1" value="5"></label></div>
       <div class="two quick-actions"><button id="textStartAtCursor">Iniciar no cursor</button><button id="textEndAtCursor">Terminar no cursor</button></div>
-      <div class="two"><label>Movimento<select id="textMotion"><option value="none">Sem movimento</option><option value="fade">Aparecer suave</option><option value="rise">Subir</option><option value="slide">Entrar da esquerda</option><option value="zoom">Zoom</option><option value="bounce">Salto</option><option value="typewriter">Máquina de escrever</option></select></label><label>Efeito<select id="textEffect"><option value="shadow">Sombra</option><option value="outline">Contorno</option><option value="glow">Brilho</option><option value="box">Caixa</option><option value="neon">Néon</option><option value="clean">Limpo</option></select></label></div>
+      <h3>Animações de texto</h3>
+      <div id="textAnimationGallery" class="animation-gallery" role="group" aria-label="Animações de texto"></div>
+      <canvas id="textAnimationCanvas" width="640" height="240" aria-label="Pré-visualização da animação de texto"></canvas>
+      <button id="previewTextAnimation" type="button">▶ Ver animação</button>
+      <div class="two"><label>Movimento<select id="textMotion"><option value="none">Sem movimento</option><option value="fade">Aparecer suave</option><option value="rise">Subir</option><option value="slide">Entrar da esquerda</option><option value="zoom">Zoom</option><option value="bounce">Salto</option><option value="typewriter">Máquina de escrever</option><option value="pulse">Pulsar</option><option value="float">Flutuar</option><option value="rotate">Rodar</option></select></label><label>Efeito<select id="textEffect"><option value="shadow">Sombra</option><option value="outline">Contorno</option><option value="glow">Brilho</option><option value="box">Caixa</option><option value="neon">Néon</option><option value="clean">Limpo</option></select></label></div>
+      <label>Duração da animação de entrada (s)<input id="textAnimationDuration" type="number" min="0.1" max="5" step="0.1" value="0.6"></label>
       <div class="two"><label>Tamanho<input id="fontSize" type="number" min="16" max="160" value="56"></label><label>Cor<input id="color" type="color" value="#ffffff"></label></div>
       <label>Posição<select id="position"><option value="bottom">Em baixo</option><option value="center">Ao centro</option><option value="top">Em cima</option></select></label>
     </section>
@@ -93,6 +107,6 @@
 </dialog>
 <dialog id="previewDialog" aria-labelledby="previewTitle"><div class="preview-heading"><h2 id="previewTitle">Pré-visualização</h2><button id="closePreview">Fechar visualização · Esc</button></div><div id="previewContent"></div></dialog>
 <dialog id="resultDialog" aria-labelledby="resultTitle"><div class="preview-heading"><h2 id="resultTitle">Vídeo exportado</h2><button id="closeResult">Fechar visualização · Esc</button></div><video id="resultVideo" controls playsinline></video></dialog>
-<script src="app.js"></script><script src="export-ui.js"></script>
+<script src="timeline.js"></script><script src="app.js"></script><script src="text-animations.js"></script><script src="export-ui.js"></script>
 </body>
 </html>

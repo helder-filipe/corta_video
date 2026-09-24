@@ -82,18 +82,23 @@ function paintVideoFrame(context, surface, image, clipIndex, projectTime, list =
   context.restore();
 }
 
-function paintText(context, surface, projectTime) {
-  let text = $('text').value.trim();
-  const start = +$('textStart').value, end = +$('textEnd').value;
+function textSettings() {
+  return { text: $('text').value.trim(), start: +$('textStart').value, end: +$('textEnd').value,
+    motion: $('textMotion').value, effect: $('textEffect').value, size: +$('fontSize').value || 56,
+    color: $('color').value, position: $('position').value, animationDuration: +$('textAnimationDuration').value || .6 };
+}
+function paintText(context, surface, projectTime, settings = textSettings()) {
+  let text = settings.text;
+  const start = settings.start, end = settings.end;
   if (!text || projectTime < start || projectTime >= end || end <= start) return;
-  const span = end - start, local = projectTime - start, edge = Math.min(.55, span / 2);
+  const span = end - start, local = projectTime - start, edge = Math.min(clamp(settings.animationDuration, .1, 5), span / 2);
   const intro = edge ? clamp(local / edge) : 1, outro = edge ? clamp((end - projectTime) / edge) : 1;
-  const motion = $('textMotion').value, effect = $('textEffect').value;
-  if (motion === 'typewriter') text = text.slice(0, Math.max(1, Math.ceil(text.length * clamp(local / Math.min(1.5, span)))));
-  const size = Math.max(16, Math.min(160, +$('fontSize').value || 56)) * surface.width / 1920;
-  const lines = text.split('\n'), gap = size * 1.25, color = $('color').value;
+  const motion = settings.motion, effect = settings.effect;
+  if (motion === 'typewriter') text = Array.from(text).slice(0, Math.ceil(Array.from(text).length * clamp(local / edge))).join('');
+  const size = Math.max(16, Math.min(160, settings.size)) * surface.width / 1920;
+  const lines = text.split('\n'), gap = size * 1.25, color = settings.color;
   let x = surface.width / 2;
-  let y = $('position').value === 'top' ? surface.height * .15 : $('position').value === 'bottom' ? surface.height * .82 : surface.height * .5;
+  let y = settings.position === 'top' ? surface.height * .15 : settings.position === 'bottom' ? surface.height * .82 : surface.height * .5;
   y -= (lines.length - 1) * gap / 2;
   let alpha = 1, scale = 1;
   if (motion === 'fade') alpha = Math.min(intro, outro);
@@ -101,8 +106,11 @@ function paintText(context, surface, projectTime) {
   if (motion === 'slide') { x -= (1 - intro) * surface.width * .65; alpha = Math.min(1, intro * 1.4, outro * 1.4); }
   if (motion === 'zoom') { scale = .62 + .38 * intro; alpha = Math.min(intro, outro); }
   if (motion === 'bounce') { y -= Math.abs(Math.sin(intro * Math.PI * 2.5)) * (1 - intro) * surface.height * .14; alpha = Math.min(1, intro * 2, outro * 2); }
+  if (motion === 'pulse') { scale = 1 + .065 * Math.sin(local * Math.PI * 2 / Math.max(.3, edge)); alpha = Math.min(intro, outro); }
+  if (motion === 'float') { y += Math.sin(local * Math.PI * 2 / Math.max(1, edge * 3)) * surface.height * .035; alpha = Math.min(intro, outro); }
+  if (motion === 'rotate') { scale = .8 + .2 * intro; alpha = Math.min(intro, outro); }
   context.save(); context.globalAlpha = alpha;
-  context.translate(x, y); context.scale(scale, scale); context.translate(-x, -y);
+  context.translate(x, y); if (motion === 'rotate') context.rotate((intro - 1) * Math.PI * .7); context.scale(scale, scale); context.translate(-x, -y);
   context.font = `700 ${size}px sans-serif`; context.textAlign = 'center'; context.textBaseline = 'middle';
   context.fillStyle = color;
   if (effect === 'shadow') { context.shadowColor = '#000'; context.shadowBlur = size * .16; context.shadowOffsetY = size * .08; }
@@ -132,6 +140,7 @@ function draw() {
   }
   paintText(ctx, canvas, time);
   $('time').textContent = `${format(time)} / ${format(duration())}`; $('seek').value = time;
+  updateTimelinePlayhead();
 }
 
 function pause() {
@@ -217,16 +226,6 @@ function render() {
   const total = duration(); $('count').textContent = `${clips.length} ${clips.length === 1 ? 'clip' : 'clips'}`;
   $('empty').hidden = clips.length > 0; $('seek').max = total; $('timeline').replaceChildren(); $('library').replaceChildren();
   clips.forEach((clip, index) => {
-    const button = document.createElement('button'); button.className = 'clip' + (index === selected ? ' active' : '');
-    button.style.flexGrow = Math.max(1, clip.end - clip.start); button.textContent = clip.name;
-    const details = document.createElement('span'); details.textContent = `${index + 1} · ${(clip.end - clip.start).toFixed(1)} s`; button.append(details);
-    button.onclick = () => { selected = index; render(); }; $('timeline').append(button);
-    if (index < clips.length - 1) {
-      const transition = document.createElement('button'); transition.className = 'transition-chip' + (clip.transition !== 'none' ? ' active' : '');
-      transition.textContent = clip.transition === 'none' ? '＋' : '◫'; transition.title = transitionNames[clip.transition] || 'Escolher transição';
-      transition.setAttribute('aria-label', `${transition.title} depois do clip ${index + 1}`); transition.onclick = () => { selected = index; render(); document.querySelector('#transitionGallery').scrollIntoView({ block: 'nearest' }); };
-      $('timeline').append(transition);
-    }
     const asset = document.createElement('div'); asset.className = 'asset';
     const thumb = document.createElement('video'); thumb.src = clip.url; thumb.muted = true; thumb.preload = 'metadata';
     const title = document.createElement('div'); title.textContent = clip.name; asset.append(thumb, title); $('library').append(asset);
@@ -238,7 +237,7 @@ function render() {
   const clip = clips[selected]; $('selected').textContent = clip ? clip.name : 'Seleciona um clip na linha de tempo.';
   ['trimStart', 'trimEnd'].forEach(id => $(id).disabled = !clip); $('trimStart').value = clip ? clip.start.toFixed(2) : ''; $('trimEnd').value = clip ? clip.end.toFixed(2) : '';
   $('clipVolume').value = clip ? clip.volume : 1; ['split', 'remove', 'left', 'right', 'applyTrim'].forEach(id => $(id).disabled = !clip);
-  $('export').disabled = !clips.length; updateTransitionControls(); draw();
+  $('export').disabled = !clips.length; updateTransitionControls(); renderTimeline(); draw();
 }
 
 function media(file, isAudio = false) {
@@ -302,11 +301,12 @@ $('transitionDuration').oninput = event => {
 function updateMusicUi() {
   const enabled = !!music;
   ['musicTrimStart', 'musicTrimEnd', 'musicTimelineStart', 'applyMusicTrim', 'musicStartAtCursor', 'musicEndAtCursor', 'musicLoop'].forEach(id => $(id).disabled = !enabled);
-  if (!music) return;
+  if (!music) { renderTimeline(); return; }
   $('musicTrimStart').value = music.start.toFixed(2); $('musicTrimEnd').value = music.end.toFixed(2); $('musicTimelineStart').value = (music.timelineStart || 0).toFixed(2); $('musicLoop').checked = music.loop;
   const span = music.end - music.start;
   $('audio-track').textContent = `${music.name} · trecho ${span.toFixed(1)} s · começa aos ${(music.timelineStart || 0).toFixed(1)} s${music.loop ? ' · repete' : ''}`;
   $('audio-track').className = 'filled';
+  renderTimeline();
 }
 $('music').onchange = async event => {
   if (!event.target.files[0]) return; pause();
@@ -320,7 +320,7 @@ $('music').onchange = async event => {
 };
 $('applyMusicTrim').onclick = async () => {
   if (!music) return; pause();
-  const start = +$('musicTrimStart').value, end = +$('musicTrimEnd').value, timelineStart = +$('musicTimelineStart').value;
+  const start = +$('musicTrimStart').value, end = Math.min(music.video.duration, +$('musicTrimEnd').value), timelineStart = +$('musicTimelineStart').value;
   if (![start, end, timelineStart].every(Number.isFinite) || start < 0 || end > music.video.duration || end - start < .05 || timelineStart < 0) { status('Confirma a entrada, a saída e o início da música no filme.'); updateMusicUi(); return; }
   music.start = start; music.end = end; music.timelineStart = timelineStart; music.loop = $('musicLoop').checked; updateMusicUi(); await seek(time); status('Corte de áudio aplicado.');
 };
@@ -339,11 +339,11 @@ $('removeMusic').onclick = () => {
 function updateTextTrack() {
   const text = $('text').value.trim(), motion = $('textMotion').selectedOptions[0].textContent;
   $('text-track').textContent = text ? `${text.replace(/\n/g, ' ')} · ${+$('textStart').value || 0}–${+$('textEnd').value || 0} s · ${motion}` : 'O teu título, no momento certo';
-  $('text-track').className = text ? 'filled' : ''; draw();
+  $('text-track').className = text ? 'filled' : ''; renderTimeline(); draw();
 }
 ['text', 'textStart', 'textEnd', 'fontSize', 'color', 'position', 'textMotion', 'textEffect'].forEach(id => $(id).oninput = updateTextTrack);
 $('textStartAtCursor').onclick = () => { $('textStart').value = time.toFixed(2); if (+$('textEnd').value <= time) $('textEnd').value = Math.min(duration() || time + 3, time + 3).toFixed(2); updateTextTrack(); };
 $('textEndAtCursor').onclick = () => { $('textEnd').value = Math.max(time, +$('textStart').value + .1).toFixed(2); updateTextTrack(); };
 
 window.addEventListener('beforeunload', event => { if (clips.length) { event.preventDefault(); event.returnValue = ''; } });
-updateMusicUi(); render();
+initTimeline(); updateMusicUi(); render();
