@@ -33,10 +33,11 @@
     </div>
     <div class="stage"><canvas id="canvas" width="960" height="540"></canvas><div id="empty"><div class="empty-icon">▷</div><h2>Espaço para a tua próxima história.</h2><p>Importa vídeos para começar a editar.</p><button id="start">Escolher vídeos ↗</button></div></div>
     <div class="transport"><button id="rewind" title="Voltar ao início" aria-label="Voltar ao início">↤</button><button id="play" class="play" aria-label="Reproduzir">▶</button><span id="time">00:00 / 00:00</span><span class="spacer"></span><span id="previewRatio" class="hint">Pré-visualização · 16:9</span></div>
+    <div class="precise-controls"><label>Posição exata no filme (s)<input id="preciseTime" type="number" min="0" step="0.001" value="0.000"></label><button id="backMs" type="button">−1 ms</button><button id="forwardMs" type="button">+1 ms</button></div><p id="preciseFeedback" class="hint" role="status">Escolhe um instante às milésimas. A imagem mostra o fotograma disponível nesse instante.</p>
     <div class="timeline-head"><h2>Linha de tempo</h2><div><button id="split">✂ Dividir aqui</button><button id="remove">Eliminar clip</button></div></div>
     <p class="hint timeline-help">Arrasta as pegas nas extremidades para recortar. Clica na régua para posicionar o cursor.</p>
     <label class="timeline-zoom">Zoom da linha de tempo <input id="timelineZoom" type="range" min="25" max="160" value="65" step="5"></label>
-    <input id="seek" aria-label="Posição na linha de tempo" type="range" min="0" max="0" step="0.01" value="0">
+    <input id="seek" aria-label="Posição na linha de tempo" type="range" min="0" max="0" step="0.001" value="0">
     <div id="timelineScroll" class="timeline-scroll">
       <div id="timelineContent" class="timeline-content">
         <div id="timelineRuler" class="timeline-ruler" aria-label="Régua de tempo"></div>
@@ -52,7 +53,7 @@
     <div class="eyebrow">AJUSTES</div>
     <section>
       <h2>Clip selecionado</h2><p id="selected" class="muted">Seleciona um clip na linha de tempo.</p>
-      <div class="two"><label>Entrada (s)<input id="trimStart" type="number" min="0" step="0.1" disabled></label><label>Saída (s)<input id="trimEnd" type="number" min="0" step="0.1" disabled></label></div>
+      <div class="two"><label>Entrada (s)<input id="trimStart" type="number" min="0" step="0.001" disabled></label><label>Saída (s)<input id="trimEnd" type="number" min="0" step="0.001" disabled></label></div>
       <button id="applyTrim">Aplicar corte</button>
       <div class="two"><button id="left">← Mover</button><button id="right">Mover →</button></div>
       <label class="range-label">Som original <input id="clipVolume" type="range" min="0" max="1" step="0.05" value="1"></label>
@@ -74,7 +75,7 @@
       <h2>Música <span>♫</span></h2>
       <label class="secondary upload">＋ Adicionar música<input id="music" type="file" accept="audio/*" hidden></label>
       <div id="musicName" class="hint">MP3, WAV ou outro áudio compatível</div>
-      <div class="three"><label>Entrada<input id="musicTrimStart" type="number" min="0" step="0.1" value="0" disabled></label><label>Saída<input id="musicTrimEnd" type="number" min="0" step="0.1" value="0" disabled></label><label>No filme<input id="musicTimelineStart" type="number" min="0" step="0.1" value="0" disabled></label></div>
+      <div class="three"><label>Entrada<input id="musicTrimStart" type="number" min="0" step="0.001" value="0" disabled></label><label>Saída<input id="musicTrimEnd" type="number" min="0" step="0.001" value="0" disabled></label><label>No filme<input id="musicTimelineStart" type="number" min="0" step="0.001" value="0" disabled></label></div>
       <button id="applyMusicTrim" disabled>Aplicar corte de áudio</button>
       <div class="two quick-actions"><button id="musicStartAtCursor" disabled>Iniciar no cursor</button><button id="musicEndAtCursor" disabled>Terminar no cursor</button></div>
       <label class="checkbox-label compact"><input id="musicLoop" type="checkbox" checked disabled> Repetir o trecho até ao fim</label>
@@ -84,7 +85,7 @@
     <section>
       <h2>Texto <span>T</span></h2>
       <textarea id="text" placeholder="Escreve o teu título…" rows="2"></textarea>
-      <div class="two"><label>De (s)<input id="textStart" type="number" min="0" step="0.1" value="0"></label><label>Até (s)<input id="textEnd" type="number" min="0" step="0.1" value="5"></label></div>
+      <div class="two"><label>De (s)<input id="textStart" type="number" min="0" step="0.001" value="0"></label><label>Até (s)<input id="textEnd" type="number" min="0" step="0.001" value="5"></label></div>
       <div class="two quick-actions"><button id="textStartAtCursor">Iniciar no cursor</button><button id="textEndAtCursor">Terminar no cursor</button></div>
       <h3>Animações de texto</h3>
       <div id="textAnimationGallery" class="animation-gallery" role="group" aria-label="Animações de texto"></div>

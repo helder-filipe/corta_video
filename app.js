@@ -1,9 +1,10 @@
 const $ = id => document.getElementById(id), canvas = $('canvas'), ctx = canvas.getContext('2d');
-let clips = [], selected = -1, time = 0, playing = false, exporting = false;
+let clips = [], selected = -1, time = 0, playing = false, exporting = false, lastTrimEdge = 'trimStart';
 let music = null, audioCtx = null, destination = null, musicGain = null, raf = 0, current = -1, busy = false;
 
 const duration = () => clips.reduce((sum, clip) => sum + clip.end - clip.start, 0);
-const format = value => `${Math.floor(value / 60).toString().padStart(2, '0')}:${Math.floor(value % 60).toString().padStart(2, '0')}`;
+const formatSeconds = value => `${Math.floor(value / 60).toString().padStart(2, '0')}:${Math.floor(value % 60).toString().padStart(2, '0')}`;
+const format = value => { const ms = Math.round(Math.max(0, value) * 1000); return Math.floor(ms / 60000).toString().padStart(2, '0') + ':' + Math.floor(ms / 1000 % 60).toString().padStart(2, '0') + '.' + (ms % 1000).toString().padStart(3, '0'); };
 const clamp = (value, min = 0, max = 1) => Math.min(max, Math.max(min, value));
 function status(message) { $('status').textContent = message; }
 
@@ -133,15 +134,17 @@ function paintText(context, surface, projectTime, settings = textSettings()) {
   context.restore();
 }
 
-function draw() {
+function draw(preview = null) {
   ctx.fillStyle = '#090a0b'; ctx.fillRect(0, 0, canvas.width, canvas.height);
   const position = locate(time);
   if (position) {
-    const video = clips[position.i].video;
+    const video = preview ? clips[preview.index].video : clips[position.i].video;
     if (video.readyState >= 2) paintVideoFrame(ctx, canvas, video, position.i, time, clips);
   }
   paintText(ctx, canvas, time);
   $('time').textContent = `${format(time)} / ${format(duration())}`; $('seek').value = time;
+  if (document.activeElement !== $('preciseTime')) $('preciseTime').value = time.toFixed(3);
+  $('preciseTime').max = duration();
   updateTimelinePlayhead();
 }
 
@@ -152,7 +155,7 @@ function pause() {
 
 function seekVideo(video, target) {
   return new Promise((resolve, reject) => {
-    if (Math.abs(video.currentTime - target) < .025 && video.readyState >= 2) { resolve(); return; }
+    if (Math.abs(video.currentTime - target) < .000001 && video.readyState >= 2) { resolve(); return; }
     const timer = setTimeout(() => { clean(); reject(new Error('Não foi possível ler este ponto do ficheiro.')); }, 10000);
     function clean() { clearTimeout(timer); video.removeEventListener('seeked', done); video.removeEventListener('error', fail); }
     function done() { clean(); resolve(); } function fail() { clean(); reject(new Error('Não foi possível ler o ficheiro.')); }
@@ -176,12 +179,23 @@ async function syncMusic(projectTime, shouldPlay) {
   if (shouldPlay && music.video.paused) await music.video.play().catch(() => {});
 }
 
-async function seek(target) {
-  pause(); time = Math.max(0, Math.min(duration(), target));
-  const position = locate(time);
-  if (position) { await seekVideo(clips[position.i].video, position.local); current = position.i; }
-  if (music) { const point = musicPositionAt(time); if (point !== null) await seekVideo(music.video, point); }
-  draw();
+let pendingSeek = null, seekWorker = null, seekRevision = 0;
+function seek(target, preview = null) {
+  pause(); pendingSeek = { target, preview, revision: ++seekRevision };
+  if (!seekWorker) seekWorker = (async () => {
+    while (pendingSeek) {
+      const request = pendingSeek; pendingSeek = null;
+      const nextTime = Math.max(0, Math.min(duration(), request.target));
+      const position = locate(nextTime);
+      if (request.preview) await seekVideo(clips[request.preview.index].video, request.preview.local);
+      else if (position) { await seekVideo(clips[position.i].video, position.local); current = position.i; }
+      if (music) { const point = musicPositionAt(nextTime); if (point !== null) await seekVideo(music.video, point); }
+      if (request.revision !== seekRevision) continue;
+      time = nextTime; draw(request.preview);
+      $('preciseFeedback').textContent = request.preview ? 'Pré-visualização do original: ' + request.preview.local.toFixed(3) + ' s' : 'Posição no filme: ' + nextTime.toFixed(3) + ' s';
+    }
+  })().finally(() => { seekWorker = null; });
+  return seekWorker;
 }
 
 async function play() {
@@ -237,7 +251,7 @@ function render() {
     $('library').innerHTML = '<div class="empty-small">Os teus vídeos começam aqui.<br>Importa um ou vários clips.</div>';
   }
   const clip = clips[selected]; $('selected').textContent = clip ? clip.name : 'Seleciona um clip na linha de tempo.';
-  ['trimStart', 'trimEnd'].forEach(id => $(id).disabled = !clip); $('trimStart').value = clip ? clip.start.toFixed(2) : ''; $('trimEnd').value = clip ? clip.end.toFixed(2) : '';
+  ['trimStart', 'trimEnd'].forEach(id => $(id).disabled = !clip); $('trimStart').value = clip ? clip.start.toFixed(3) : ''; $('trimEnd').value = clip ? clip.end.toFixed(3) : '';
   $('clipVolume').value = clip ? clip.volume : 1; ['split', 'remove', 'left', 'right', 'applyTrim'].forEach(id => $(id).disabled = !clip);
   $('export').disabled = !clips.length; updateTransitionControls(); renderTimeline(); draw();
 }
@@ -273,7 +287,10 @@ $('applyTrim').onclick = async () => {
   const clip = clips[selected]; if (!clip) return;
   const start = +$('trimStart').value, end = Math.min(clip.video.duration, +$('trimEnd').value);
   if (!Number.isFinite(start) || !Number.isFinite(end) || start < 0 || end > clip.video.duration || end - start < .05) { status('Define uma entrada anterior à saída, dentro da duração do clip.'); render(); return; }
-  pause(); clip.start = start; clip.end = end; time = Math.min(time, duration()); render(); await seek(time); status('Corte aplicado.');
+  pause(); clip.start = start; clip.end = end;
+  const offset = clips.slice(0, selected).reduce((sum, item) => sum + item.end - item.start, 0);
+  time = offset + (lastTrimEdge === 'trimEnd' ? Math.max(0, end - start - .001) : 0);
+  render(); await seek(time); status('Corte aplicado.');
 };
 $('remove').onclick = () => {
   pause(); const [clip] = clips.splice(selected, 1); clip.video.pause(); clip.gain?.disconnect(); URL.revokeObjectURL(clip.url);
@@ -304,7 +321,7 @@ function updateMusicUi() {
   const enabled = !!music;
   ['musicTrimStart', 'musicTrimEnd', 'musicTimelineStart', 'applyMusicTrim', 'musicStartAtCursor', 'musicEndAtCursor', 'musicLoop'].forEach(id => $(id).disabled = !enabled);
   if (!music) { renderTimeline(); return; }
-  $('musicTrimStart').value = music.start.toFixed(2); $('musicTrimEnd').value = music.end.toFixed(2); $('musicTimelineStart').value = (music.timelineStart || 0).toFixed(2); $('musicLoop').checked = music.loop;
+  $('musicTrimStart').value = music.start.toFixed(3); $('musicTrimEnd').value = music.end.toFixed(3); $('musicTimelineStart').value = (music.timelineStart || 0).toFixed(3); $('musicLoop').checked = music.loop;
   const span = music.end - music.start;
   $('audio-track').textContent = `${music.name} · trecho ${span.toFixed(1)} s · começa aos ${(music.timelineStart || 0).toFixed(1)} s${music.loop ? ' · repete' : ''}`;
   $('audio-track').className = 'filled';
@@ -326,10 +343,10 @@ $('applyMusicTrim').onclick = async () => {
   if (![start, end, timelineStart].every(Number.isFinite) || start < 0 || end > music.video.duration || end - start < .05 || timelineStart < 0) { status('Confirma a entrada, a saída e o início da música no filme.'); updateMusicUi(); return; }
   music.start = start; music.end = end; music.timelineStart = timelineStart; music.loop = $('musicLoop').checked; updateMusicUi(); await seek(time); status('Corte de áudio aplicado.');
 };
-$('musicStartAtCursor').onclick = () => { if (!music) return; $('musicTimelineStart').value = time.toFixed(2); $('applyMusicTrim').click(); };
+$('musicStartAtCursor').onclick = () => { if (!music) return; $('musicTimelineStart').value = time.toFixed(3); $('applyMusicTrim').click(); };
 $('musicEndAtCursor').onclick = () => {
   if (!music) return; const length = Math.max(.05, time - +$('musicTimelineStart').value);
-  $('musicTrimEnd').value = Math.min(music.video.duration, +$('musicTrimStart').value + length).toFixed(2); $('musicLoop').checked = false; $('applyMusicTrim').click();
+  $('musicTrimEnd').value = Math.min(music.video.duration, +$('musicTrimStart').value + length).toFixed(3); $('musicLoop').checked = false; $('applyMusicTrim').click();
 };
 $('musicLoop').onchange = () => { if (music) { music.loop = $('musicLoop').checked; updateMusicUi(); } };
 $('musicVolume').oninput = event => { if (musicGain) musicGain.gain.value = +event.target.value; };
@@ -344,8 +361,20 @@ function updateTextTrack() {
   $('text-track').className = text ? 'filled' : ''; renderTimeline(); draw();
 }
 ['text', 'textStart', 'textEnd', 'fontSize', 'color', 'position', 'textMotion', 'textEffect'].forEach(id => $(id).oninput = updateTextTrack);
-$('textStartAtCursor').onclick = () => { $('textStart').value = time.toFixed(2); if (+$('textEnd').value <= time) $('textEnd').value = Math.min(duration() || time + 3, time + 3).toFixed(2); updateTextTrack(); };
-$('textEndAtCursor').onclick = () => { $('textEnd').value = Math.max(time, +$('textStart').value + .1).toFixed(2); updateTextTrack(); };
+$('textStartAtCursor').onclick = () => { $('textStart').value = time.toFixed(3); if (+$('textEnd').value <= time) $('textEnd').value = Math.min(duration() || time + 3, time + 3).toFixed(3); updateTextTrack(); };
+$('textEndAtCursor').onclick = () => { $('textEnd').value = Math.max(time, +$('textStart').value + .1).toFixed(3); updateTextTrack(); };
 
 window.addEventListener('beforeunload', event => { if (clips.length) { event.preventDefault(); event.returnValue = ''; } });
 initTimeline(); updateMusicUi(); render();
+
+$('preciseTime').oninput = event => { if (event.target.value !== '' && Number.isFinite(event.target.valueAsNumber)) seek(event.target.valueAsNumber).catch(error => status(error.message)); };
+$('preciseTime').onchange = () => { $('preciseTime').value = Math.min(duration(), Math.max(0, +$('preciseTime').value || 0)).toFixed(3); };
+$('backMs').onclick = () => seek(Math.round((time - .001) * 1000) / 1000).catch(error => status(error.message));
+$('forwardMs').onclick = () => seek(Math.round((time + .001) * 1000) / 1000).catch(error => status(error.message));
+['trimStart', 'trimEnd'].forEach(id => $(id).addEventListener('input', event => {
+  lastTrimEdge = id;
+  const clip = clips[selected], local = event.target.valueAsNumber;
+  if (!clip || !Number.isFinite(local) || local < 0 || local > clip.video.duration) return;
+  const offset = clips.slice(0, selected).reduce((sum, item) => sum + item.end - item.start, 0);
+  seek(offset + clamp(local - clip.start, 0, clip.end - clip.start), {index: selected, local}).catch(error => status(error.message));
+}));

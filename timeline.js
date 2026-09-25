@@ -3,7 +3,7 @@
 let timelineGesture = null;
 const timelineInset = 76;
 function timelineScale() { return Number(document.getElementById('timelineZoom').value); }
-function timelineClock(value) { return Math.max(0, value).toFixed(2).replace('.', ',') + ' s'; }
+function timelineClock(value) { return Math.max(0, value).toFixed(3).replace('.', ',') + ' s'; }
 function updateTimelinePlayhead() {
   const head = $('timelinePlayhead'); if (!head) return;
   head.hidden = !clips.length; head.style.left = `${timelineInset + time * timelineScale()}px`;
@@ -31,12 +31,12 @@ function trimValues(original, kind, edge, delta) {
 function applyTimelineValues(kind, index, values) {
   if (kind === 'video') {
     clips[index].start = values.start; clips[index].end = values.end;
-    $('trimStart').value = values.start.toFixed(2); $('trimEnd').value = values.end.toFixed(2);
+    $('trimStart').value = values.start.toFixed(3); $('trimEnd').value = values.end.toFixed(3);
   } else if (kind === 'audio') {
     music.start = values.start; music.end = values.end; music.timelineStart = values.at;
-    $('musicTrimStart').value = values.start.toFixed(2); $('musicTrimEnd').value = values.end.toFixed(2); $('musicTimelineStart').value = values.at.toFixed(2);
+    $('musicTrimStart').value = values.start.toFixed(3); $('musicTrimEnd').value = values.end.toFixed(3); $('musicTimelineStart').value = values.at.toFixed(3);
   } else {
-    $('textStart').value = values.start.toFixed(2); $('textEnd').value = values.end.toFixed(2);
+    $('textStart').value = values.start.toFixed(3); $('textEnd').value = values.end.toFixed(3);
   }
 }
 function timelineFeedback(kind, values) {
@@ -51,9 +51,9 @@ function layoutTimelineBars() {
     bar.querySelector('.bar-duration').textContent = timelineClock(s.end - s.start);
     bar.querySelectorAll('.trim-handle').forEach(h => {
       const start = h.dataset.edge === 'start';
-      h.setAttribute('aria-valuenow', (start ? s.start : s.end).toFixed(2));
-      h.setAttribute('aria-valuemin', start ? '0' : (s.start + .05).toFixed(2));
-      h.setAttribute('aria-valuemax', (start ? s.end - .05 : s.max).toFixed(2));
+      h.setAttribute('aria-valuenow', (start ? s.start : s.end).toFixed(3));
+      h.setAttribute('aria-valuemin', start ? '0' : (s.start + .05).toFixed(3));
+      h.setAttribute('aria-valuemax', (start ? s.end - .05 : s.max).toFixed(3));
       h.setAttribute('aria-valuetext', timelineClock(start ? s.start : s.end));
     });
   });
@@ -75,7 +75,7 @@ function finishTimelineGesture(cancel = false) {
   if (cancel) $('trimFeedback').textContent = 'Recorte cancelado.';
   else timelineFeedback(gesture.kind, values);
   // Show the frame adjoining the edited boundary once the gesture is committed.
-  const at = gesture.edge === 'start' ? values.at : values.at + values.end - values.start - .025;
+  const at = gesture.edge === 'start' ? values.at : values.at + values.end - values.start - .001;
   seek(Math.min(duration(), Math.max(0, at))).catch(error => status(error.message));
 }
 function startTimelineGesture(event, kind, index, edge, handle) {
@@ -91,7 +91,7 @@ function makeTrimHandle(kind, index, edge) {
   const handle = document.createElement('button'); handle.type = 'button'; handle.className = `trim-handle trim-${edge}`; handle.dataset.edge = edge;
   const name = kind === 'video' ? `vídeo ${index + 1}` : kind === 'audio' ? 'áudio' : 'texto';
   handle.setAttribute('role', 'slider'); handle.setAttribute('aria-label', `Recortar ${edge === 'start' ? 'início' : 'fim'} de ${name}`);
-  handle.title = 'Arrasta para recortar · setas: 0,1 s · Shift: 1 s'; handle.textContent = '⋮';
+  handle.title = 'Arrasta para recortar · setas: 1 ms · Shift: 0,1 s'; handle.textContent = '⋮';
   handle.onpointerdown = event => startTimelineGesture(event, kind, index, edge, handle);
   handle.onpointermove = event => {
     const g = timelineGesture; if (!g || g.handle !== handle || g.pointerId !== event.pointerId) return;
@@ -107,7 +107,7 @@ function makeTrimHandle(kind, index, edge) {
     if (event.key === 'Escape' && timelineGesture) { event.preventDefault(); finishTimelineGesture(true); return; }
     if (!['ArrowLeft', 'ArrowRight'].includes(event.key) || exporting) return;
     event.preventDefault(); pause(); if (kind === 'video') selected = index;
-    const original = timelineItemState(kind, index), delta = (event.key === 'ArrowRight' ? 1 : -1) * (event.shiftKey ? 1 : .1);
+    const original = timelineItemState(kind, index), delta = (event.key === 'ArrowRight' ? 1 : -1) * (event.shiftKey ? .1 : .001);
     applyTimelineValues(kind, index, trimValues(original, kind, edge, delta));
     timelineGesture = { kind, index, edge, handle, original }; finishTimelineGesture();
   };
@@ -137,7 +137,7 @@ function renderTimeline() {
   const step = scale >= 60 ? 1 : scale >= 35 ? 2 : 5;
   for (let s = 0; s < seconds; s += step) {
     const tick = document.createElement('button'); tick.type = 'button'; tick.style.left = `${s * scale}px`;
-    tick.textContent = format(s); tick.setAttribute('aria-label', `Ir para ${s} segundos`);
+    tick.textContent = formatSeconds(s); tick.setAttribute('aria-label', `Ir para ${s} segundos`);
     tick.onclick = () => seek(Math.min(s, duration())).catch(error => status(error.message)); ruler.append(tick);
   }
   const track = $('timeline'); track.replaceChildren();

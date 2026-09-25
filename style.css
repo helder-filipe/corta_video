@@ -62,3 +62,4 @@ main{grid-template-columns:258px minmax(440px,1fr) 340px}
 
 .stage,#previewContent .stage{max-height:none}
 .format-controls #customRatio{grid-column:1/-1}
+.precise-controls{display:flex;align-items:end;gap:8px;flex-wrap:wrap}.precise-controls label{flex:1;min-width:180px}.precise-controls input,#time{font-variant-numeric:tabular-nums}.precise-controls button{margin-bottom:10px}
