@@ -23,9 +23,16 @@
     <div class="privacy">◈ Os ficheiros ficam no teu dispositivo.</div>
   </aside>
   <section class="workspace">
-    <div class="viewer-title"><span>PRÉ-VISUALIZAÇÃO</span><div class="viewer-actions"><span class="badge">16:9</span><button id="expandPreview" aria-label="Ampliar pré-visualização">⛶ Ampliar</button></div></div>
+    <div class="viewer-title"><span>PRÉ-VISUALIZAÇÃO</span><div class="viewer-actions"><span id="ratioBadge" class="badge">16:9</span><button id="expandPreview" aria-label="Ampliar pré-visualização">⛶ Ampliar</button></div></div>
+    <div class="format-controls">
+      <label>Proporção do vídeo<select id="aspectRatio"><option value="16:9">16:9 · Horizontal</option><option value="9:16">9:16 · Vertical</option><option value="1:1">1:1 · Quadrado</option><option value="4:5">4:5 · Retrato</option><option value="3:4">3:4 · Retrato clássico</option><option value="2:3">2:3 · Vertical alongado</option><option value="3:2">3:2 · Fotográfico</option><option value="4:3">4:3 · Clássico</option><option value="21:9">21:9 · Panorâmico</option><option value="custom">Personalizada</option></select></label>
+      <label>Enquadramento<select id="frameFit"><option value="contain">Mostrar tudo · com margens</option><option value="cover">Preencher · recortar imagem</option></select></label>
+      <p class="hint">Escolhe a proporção para o destino do vídeo. O mesmo formato será usado na exportação.</p>
+      <div id="customRatio" class="two" hidden><label>Proporção — largura<input id="ratioWidth" type="number" min="1" max="32" step="1" value="16"></label><label>Proporção — altura<input id="ratioHeight" type="number" min="1" max="32" step="1" value="9"></label></div>
+      <div id="framePosition" class="two" hidden><label>Enquadramento horizontal<input id="frameX" type="range" min="0" max="100" value="50"></label><label>Enquadramento vertical<input id="frameY" type="range" min="0" max="100" value="50"></label></div>
+    </div>
     <div class="stage"><canvas id="canvas" width="960" height="540"></canvas><div id="empty"><div class="empty-icon">▷</div><h2>Espaço para a tua próxima história.</h2><p>Importa vídeos para começar a editar.</p><button id="start">Escolher vídeos ↗</button></div></div>
-    <div class="transport"><button id="rewind" title="Voltar ao início" aria-label="Voltar ao início">↤</button><button id="play" class="play" aria-label="Reproduzir">▶</button><span id="time">00:00 / 00:00</span><span class="spacer"></span><span class="hint">Pré-visualização · 16:9</span></div>
+    <div class="transport"><button id="rewind" title="Voltar ao início" aria-label="Voltar ao início">↤</button><button id="play" class="play" aria-label="Reproduzir">▶</button><span id="time">00:00 / 00:00</span><span class="spacer"></span><span id="previewRatio" class="hint">Pré-visualização · 16:9</span></div>
     <div class="timeline-head"><h2>Linha de tempo</h2><div><button id="split">✂ Dividir aqui</button><button id="remove">Eliminar clip</button></div></div>
     <p class="hint timeline-help">Arrasta as pegas nas extremidades para recortar. Clica na régua para posicionar o cursor.</p>
     <label class="timeline-zoom">Zoom da linha de tempo <input id="timelineZoom" type="range" min="25" max="160" value="65" step="5"></label>
@@ -94,6 +101,7 @@
 <dialog id="dialog" aria-labelledby="exportTitle">
   <button type="button" id="closeExport" class="close" aria-label="Fechar janela de exportação">×</button>
   <div class="eyebrow">O TEU FILME, PRONTO A SAIR</div><h2 id="exportTitle">Exportar vídeo</h2>
+  <p id="exportAspect" class="hint">Proporção do vídeo: 16:9</p>
   <div class="two"><label>Formato<select id="exportFormat"><option value="mp4">MP4 · H.264</option><option value="webm">WebM · VP8</option></select></label><label>Fotogramas por segundo<select id="fps"><option value="30">30 fps</option><option value="60">60 fps</option></select></label></div>
   <label>Resolução<select id="resolution"><option value="720">HD · 1280 × 720</option><option value="1080" selected>Full HD · 1920 × 1080</option><option value="2160">4K UHD · 3840 × 2160</option></select></label>
   <label class="checkbox-label"><input id="includeAudio" type="checkbox" checked> Incluir áudio original e música</label>
@@ -107,6 +115,6 @@
 </dialog>
 <dialog id="previewDialog" aria-labelledby="previewTitle"><div class="preview-heading"><h2 id="previewTitle">Pré-visualização</h2><button id="closePreview">Fechar visualização · Esc</button></div><div id="previewContent"></div></dialog>
 <dialog id="resultDialog" aria-labelledby="resultTitle"><div class="preview-heading"><h2 id="resultTitle">Vídeo exportado</h2><button id="closeResult">Fechar visualização · Esc</button></div><video id="resultVideo" controls playsinline></video></dialog>
-<script src="timeline.js"></script><script src="app.js"></script><script src="text-animations.js"></script><script src="export-ui.js"></script>
+<script src="timeline.js"></script><script src="app.js"></script><script src="formats.js"></script><script src="text-animations.js"></script><script src="export-ui.js"></script>
 </body>
 </html>

@@ -60,7 +60,8 @@ $('render').onclick = async () => {
   if ($('text').value.trim() && (+$('textEnd').value <= +$('textStart').value)) {
     $('exportStatus').textContent = 'O fim do texto deve ser posterior ao início.'; return;
   }
-  const format = $('exportFormat').value, fps = +$('fps').value, height = +$('resolution').value;
+  const format = $('exportFormat').value, fps = +$('fps').value;
+  const { width, height } = outputDimensions(+$('resolution').value);
   const name = ($('project').value.trim() || 'meu-filme').replace(/[<>:"/\\|?*\x00-\x1f]/g, '-') + '.' + format;
   const oldTime = time;
   let handle, writable;
@@ -86,7 +87,7 @@ $('render').onclick = async () => {
     if (handle) writable = await handle.createWritable();
     const blob = await exportFilm({
       clips: clips.map(c => ({ ...c })), music: music ? { ...music } : null,
-      musicVolume: +$('musicVolume').value, width: height * 16 / 9, height, fps, format,
+      musicVolume: +$('musicVolume').value, width, height, fps, format,
       includeAudio: $('includeAudio').checked, writable, signal: exportController.signal, paintText, paintVideoFrame,
       onProgress: (percent, message) => {
         $('progress').value = percent;
@@ -99,7 +100,7 @@ $('render').onclick = async () => {
     savedResult = { blob, handle, name: handle ? handle.name : name };
     if (blob) downloadBlob(blob, name);
     $('progress').value = 100;
-    $('exportStatus').textContent = `${format.toUpperCase()} · ${height * 16 / 9} × ${height} · ${fps} fps — ${handle ? 'guardado em «' + handle.name + '».' : 'pronto. Transferência iniciada.'}`;
+    $('exportStatus').textContent = `${format.toUpperCase()} · ${width} × ${height} · ${fps} fps — ${handle ? 'guardado em «' + handle.name + '».' : 'pronto. Transferência iniciada.'}`;
     $('downloadResult').hidden = false; $('viewResult').hidden = false;
     status('Vídeo exportado · ' + fps + ' fps');
   } catch (e) {

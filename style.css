@@ -57,3 +57,8 @@ main{grid-template-columns:258px minmax(440px,1fr) 340px}
 #textAnimationCanvas{width:100%;height:auto;aspect-ratio:8/3;border:1px solid #3a414e;border-radius:7px;margin:12px 0 8px}
 #previewTextAnimation{width:100%;font-size:13px}.timeline-scroll:focus-within{border-color:#68794c}
 @media(max-width:680px){.trim-handle{width:18px}.timeline-zoom{flex-wrap:wrap}#timeline{overflow:visible}.timeline-head>div{display:flex;gap:5px}.timeline-head button{white-space:nowrap}}
+
+.format-controls{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}.format-controls p,.format-controls #framePosition{grid-column:1/-1;margin:0}.format-controls [hidden]{display:none!important}.stage{margin-inline:auto;width:100%}.stage #canvas{width:100%;height:100%;object-fit:contain}#previewContent .stage{margin-inline:auto} @media(max-width:600px){.format-controls{grid-template-columns:1fr}}
+
+.stage,#previewContent .stage{max-height:none}
+.format-controls #customRatio{grid-column:1/-1}

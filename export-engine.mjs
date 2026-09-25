@@ -99,7 +99,8 @@ export async function exportFilm({ clips, music, musicVolume, width, height, fps
       const c = clips[clipIndex];
       const end = offset + c.end - c.start;
       const [first, stop] = frameRange(offset, end, fps);
-      const sink = new CanvasSink(inputs.get(c.file).video, { width, height, fit: 'contain', poolSize: 2 });
+      // Keep the source aspect ratio: the shared painter handles crop and placement.
+      const sink = new CanvasSink(inputs.get(c.file).video, { poolSize: 2 });
       function* timestamps() { for (let i = first; i < stop; i++) yield c.start + i / fps - offset; }
       let index = first;
       for await (const frame of sink.canvasesAtTimestamps(timestamps())) {

@@ -47,9 +47,11 @@ function transitionState(index, projectTime, list = clips) {
 function drawContained(context, surface, image) {
   const sourceWidth = image.videoWidth || image.width || surface.width;
   const sourceHeight = image.videoHeight || image.height || surface.height;
-  const scale = Math.min(surface.width / sourceWidth, surface.height / sourceHeight);
+  const fill = $('frameFit').value === 'cover';
+  const scale = (fill ? Math.max : Math.min)(surface.width / sourceWidth, surface.height / sourceHeight);
   const width = sourceWidth * scale, height = sourceHeight * scale;
-  context.drawImage(image, (surface.width - width) / 2, (surface.height - height) / 2, width, height);
+  const x = fill ? +$('frameX').value / 100 : .5, y = fill ? +$('frameY').value / 100 : .5;
+  context.drawImage(image, (surface.width - width) * x, (surface.height - height) * y, width, height);
 }
 
 function paintVideoFrame(context, surface, image, clipIndex, projectTime, list = clips) {
