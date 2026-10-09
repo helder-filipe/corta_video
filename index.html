@@ -5,6 +5,12 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Corta — Estúdio de vídeo</title>
   <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="subtitles.css">
+<link rel="icon" type="image/svg+xml" href="icons/corta.svg">
+<link rel="icon" href="favicon.ico">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#111214">
 </head>
 <body>
 <header>
@@ -117,5 +123,6 @@
 <dialog id="previewDialog" aria-labelledby="previewTitle"><div class="preview-heading"><h2 id="previewTitle">Pré-visualização</h2><button id="closePreview">Fechar visualização · Esc</button></div><div id="previewContent"></div></dialog>
 <dialog id="resultDialog" aria-labelledby="resultTitle"><div class="preview-heading"><h2 id="resultTitle">Vídeo exportado</h2><button id="closeResult">Fechar visualização · Esc</button></div><video id="resultVideo" controls playsinline></video></dialog>
 <script src="timeline.js"></script><script src="app.js"></script><script src="formats.js"></script><script src="text-animations.js"></script><script src="export-ui.js"></script>
+<script src="subtitle-projects.js"></script><script src="subtitles-core.js"></script><script src="subtitles.js"></script>
 </body>
 </html>

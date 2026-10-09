@@ -70,7 +70,7 @@ $('render').onclick = async () => {
     ? window.showSaveFilePicker({ suggestedName: name, types: [{ description: 'Vídeo ' + format.toUpperCase(), accept: { [format === 'mp4' ? 'video/mp4' : 'video/webm']: ['.' + format] } }] })
     : null;
   exporting = true; pause(); exportController = new AbortController();
-  const controls = Array.from(document.querySelectorAll('main input,main button,main textarea,main select,header input,#dialog select,#includeAudio'));
+  const controls = Array.from(document.querySelectorAll('main input,main button,main textarea,main select,header input,#dialog select,#includeAudio,#exportSubtitles'));
   const disabled = controls.map(el => el.disabled);
   controls.forEach(el => el.disabled = true);
   document.querySelector('main').inert = true;

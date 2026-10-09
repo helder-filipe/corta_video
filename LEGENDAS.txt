@@ -1,0 +1,69 @@
+LEGENDAS — CORTA STUDIO
+
+O novo painel Legendas está por baixo dos controlos de áudio. A faixa verde
+de legendas aparece na mesma linha de tempo dos vídeos, com o mesmo zoom.
+
+CRIAR E SINCRONIZAR
+1. Importa o vídeo e coloca o cursor onde a fala começa.
+2. Clica em «Legenda no cursor» (ou Ctrl+Alt+L).
+3. Escreve o texto. A edição do texto é guardada automaticamente na sessão.
+4. Define Entrada e Saída em segundos, com três casas decimais. Podes usar
+   «Entrada = cursor» e «Saída = cursor» e «Aplicar tempos e texto».
+5. «Ouvir este intervalo» reproduz o trecho correspondente à legenda.
+
+Podes arrastar uma legenda na faixa verde para a deslocar; as extremidades
+alteram a entrada ou a saída. Os campos numéricos oferecem maior precisão.
+Clicar numa legenda da lista posiciona o vídeo no início da legenda.
+Os tempos referem-se ao filme completo: revê as legendas depois de cortar,
+mover ou eliminar clips. Não existe ajuste automático aos cortes do vídeo.
+
+FERRAMENTAS
+- Procurar texto na lista.
+- Duplicar: cria uma cópia imediatamente após a legenda selecionada.
+- Dividir no cursor: divide o intervalo no cursor do vídeo e o texto no
+  ponto de inserção do campo de texto (ou numa posição proporcional).
+- Juntar à seguinte: combina texto e intervalo de duas legendas consecutivas.
+- Eliminar legenda e recuperar com Desfazer / Ctrl+Z.
+- Deslocar todas: valores positivos atrasam, negativos adiantam as legendas.
+  O editor recusa deslocamentos que coloquem legendas antes do segundo zero.
+- Avisos de sobreposição, texto vazio, intervalos fora do filme, leitura
+  rápida, linhas longas e mais de duas linhas. São orientações de revisão.
+
+IMPORTAR E EXPORTAR
+Importa SRT ou WebVTT (.srt/.vtt) em UTF-8. Escolhe entre acrescentar legendas
+ou substituir a lista atual. Podes desfazer a importação. Máximo: 10 MB e
+10 000 legendas. A importação mantém texto e tempos; não conserva estilos,
+posições ou marcações individuais presentes no ficheiro.
+
+«Guardar SRT» e «Guardar VTT» criam ficheiros de legendas separados, com
+texto e tempos. A formatação visual é a definida pelo leitor desses ficheiros.
+Preenche ou elimina legendas vazias antes de os guardar.
+
+FORMATAÇÃO E VÍDEO
+Em «Sincronização e formatação» podes escolher fonte, tamanho, cor, fundo,
+opacidade, contorno, negrito, itálico, alinhamento, posição, largura,
+entrelinha e margem vertical. O estilo aplica-se a todas as legendas.
+O texto é distribuído automaticamente em linhas para caber no formato do vídeo.
+As fontes carregadas no painel Texto também podem ser usadas nas legendas.
+
+«Mostrar na pré-visualização» controla apenas a visualização no editor.
+«Incluir legendas no vídeo exportado» / «Gravar legendas na imagem do vídeo»
+controla a exportação MP4/WebM. Estas legendas ficam permanentemente gravadas
+na imagem; não são uma faixa que o espetador possa ligar e desligar.
+Para legendas opcionais, exporta o vídeo sem legendas e fornece SRT/VTT à parte.
+
+PROJETOS
+Guardar projeto inclui as legendas, tempos e estilo. A fonte importada usada
+nas legendas também é incluída. Fontes do sistema têm de existir no computador
+onde reabres o projeto. Projetos antigos abrem com a lista de legendas vazia.
+Limpar projeto remove também as legendas; Desfazer permite recuperá-las.
+
+Esta versão permite introdução manual e importação. Não faz reconhecimento
+de voz, tradução automática ou transcrição automática.
+
+VALIDAÇÃO
+Testes de integração passaram: criação, edição, duplicação, sincronização,
+importação SRT/VTT, exportação de legendas, divisão, junção, Desfazer,
+guardar/reabrir projetos e inclusão opcional na imagem.
+Os testes simulam reprodução e canvas; não equivalem a uma exportação real
+de vídeo nem a uma inspeção visual num navegador nesta sessão.
