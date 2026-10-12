@@ -8,3 +8,7 @@ Editor local de vídeos, imagens, música, títulos e legendas. Os ficheiros fic
 - Preservar enquadramento, transições, música, títulos e legendas.
 - Guardar os originais no projeto e reconstruir as imagens ao abrir.
 - GIF/formatos animados são usados como imagem fixa, sem animação.
+
+## Reordenação na biblioteca
+
+Reordenar vídeos e imagens diretamente na biblioteca por arrastar ou botões ↑/↓; refletir a mesma ordem na timeline, exportação e projeto. Permitir Desfazer.

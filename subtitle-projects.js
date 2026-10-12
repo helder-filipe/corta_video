@@ -6,7 +6,7 @@
   const values=()=>Object.fromEntries(ids.map(id=>[id,$(id).type==='checkbox'?$(id).checked:$(id).value]));
   const setValues=v=>{for(const id of ids)if(Object.hasOwn(v,id)){if($(id).type==='checkbox')$(id).checked=!!v[id];else $(id).value=v[id];}updateProjectFormat();updateMusicUi();};
   const snapshot=()=>({clips:clips.map(c=>({...c})),music:music?{...music}:null,selected,time,values:values(),subtitles:window.CortaSubtitles?.snapshot()});
-  const bar=document.createElement('div');bar.className='subtitle-toolbar';bar.innerHTML='<button id="undoEdit" disabled>↶ Desfazer legendas/projeto</button><button id="clearEdit">Limpar projeto</button>';
+  const bar=document.createElement('div');bar.className='subtitle-toolbar';bar.innerHTML='<button id="undoEdit" disabled>↶ Desfazer</button><button id="clearEdit">Limpar projeto</button>';
   $('trimFeedback').after(bar);
   const header=document.createElement('span');header.innerHTML='<button id="openProject">Abrir projeto</button> <button id="saveProject">Guardar projeto</button><input type="file" id="projectInput" accept=".corta" hidden>';$('export').before(header);
   const refresh=()=>{$('undoEdit').disabled=busy||exporting||!history.length;};

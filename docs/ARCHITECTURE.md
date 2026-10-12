@@ -10,3 +10,7 @@ Aplicação estática HTML/CSS/JavaScript; scripts clássicos para edição e m�
 - formats.js / text-animations.js: enquadramento e títulos.
 
 Os clips de imagem usam kind=image, duração inicial de 5 s e volume 0. O relógio suporta os controlos existentes, mas não é ligado a AudioContext. Recursos de imagem da exportação são libertados no finally.
+
+## Reordenação na biblioteca
+
+libraryAsset desenha cada entrada. reorderClip é a operação comum para a biblioteca e os botões Mover do painel; altera o array clips numa transação com histórico e reposiciona a pré-visualização no clip movido.

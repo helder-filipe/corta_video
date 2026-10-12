@@ -239,13 +239,61 @@ function updateTransitionControls() {
   $('transitionDurationValue').textContent = `${Number($('transitionDuration').value).toFixed(1).replace('.', ',')} s`;
 }
 
+let libraryDragClip = null;
+function clearLibraryDrag() {
+  libraryDragClip=null;
+  document.querySelectorAll('.asset').forEach(el=>el.classList.remove('dragging','drop-before','drop-after'));
+}
+async function reorderClip(from,to,focusControl='select') {
+  if(busy||exporting||from===to||from<0||to<0||from>=clips.length||to>=clips.length)return;
+  await window.CortaEditor.transaction(async()=>{
+    if(seekWorker)await seekWorker;
+    const clip=clips[from],point=locate(time);
+    const local=point?.i===from?Math.max(0,Math.min(clip.end-clip.start-.001,point.local-clip.start)):0;
+    window.CortaEditor.record('reordenar clips');
+    clips.splice(from,1);clips.splice(to,0,clip);selected=to;
+    const offset=clips.slice(0,to).reduce((sum,c)=>sum+c.end-c.start,0);
+    await seek(offset+local);
+    status(`«${clip.name}» movido para a posição ${to+1}. Biblioteca e linha de tempo atualizadas.`);
+  });
+  const row=$('library').children[selected];
+  const control=row?.querySelector(`[data-library-control="${focusControl}"]:not(:disabled)`)||row?.querySelector('[data-library-control="select"]');
+  control?.focus({preventScroll:true});row?.scrollIntoView?.({block:'nearest'});
+}
+function libraryAsset(clip,index) {
+  const asset=document.createElement('div');asset.className='asset library-item'+(index===selected?' selected':'');asset.draggable=true;
+  asset.dataset.index=String(index);
+  const select=document.createElement('button');select.type='button';select.className='library-select';select.dataset.libraryControl='select';
+  select.setAttribute('aria-label',`Selecionar clip ${index+1}: ${clip.name}`);select.setAttribute('aria-pressed',String(index===selected));
+  const thumb=document.createElement(clip.kind==='image'?'img':'video');thumb.src=clip.url;thumb.muted=true;thumb.preload='metadata';thumb.draggable=false;thumb.setAttribute('aria-hidden','true');if(clip.kind==='image')thumb.alt='';
+  const title=document.createElement('span');title.textContent=`${index+1}. ${clip.name}`;title.title=clip.name;select.append(thumb,title);
+  select.onclick=()=>{if(busy||exporting)return;pause();selected=index;render();};
+  const actions=document.createElement('div');actions.className='library-order';
+  for(const [dir,label,symbol] of [[-1,'Mover para cima','↑'],[1,'Mover para baixo','↓']]){
+    const button=document.createElement('button');button.type='button';button.textContent=symbol;button.dataset.libraryControl=dir<0?'up':'down';button.title=label;button.setAttribute('aria-label',`${label}: ${clip.name}`);button.disabled=index+dir<0||index+dir>=clips.length;
+    button.onclick=()=>reorderClip(index,index+dir,button.dataset.libraryControl);actions.append(button);
+  }
+  asset.append(select,actions);
+  asset.ondragstart=event=>{if(busy||exporting){event.preventDefault();return;}libraryDragClip=clip;pause();asset.classList.add('dragging');event.dataTransfer.effectAllowed='move';event.dataTransfer.setData('text/plain',String(index));};
+  asset.ondragover=event=>{
+    if(!libraryDragClip||busy||exporting)return;event.preventDefault();event.dataTransfer.dropEffect='move';
+    document.querySelectorAll('.drop-before,.drop-after').forEach(el=>el.classList.remove('drop-before','drop-after'));
+    if(libraryDragClip!==clip){const rect=asset.getBoundingClientRect();asset.classList.add(event.clientY<rect.top+rect.height/2?'drop-before':'drop-after');}
+  };
+  asset.ondrop=event=>{
+    if(!libraryDragClip||busy||exporting)return;event.preventDefault();
+    const from=clips.indexOf(libraryDragClip),target=clips.indexOf(clip),rect=asset.getBoundingClientRect();
+    const slot=target+(event.clientY>=rect.top+rect.height/2?1:0),to=slot-(from<slot?1:0);
+    clearLibraryDrag();reorderClip(from,to);
+  };
+  asset.ondragend=clearLibraryDrag;
+  return asset;
+}
 function render() {
   const total = duration(); $('count').textContent = `${clips.length} ${clips.length === 1 ? 'clip' : 'clips'}`;
   $('empty').hidden = clips.length > 0; $('seek').max = total; $('timeline').replaceChildren(); $('library').replaceChildren();
   clips.forEach((clip, index) => {
-    const asset = document.createElement('div'); asset.className = 'asset';
-    const thumb = document.createElement(clip.kind==='image'?'img':'video'); thumb.src = clip.url; thumb.muted = true; thumb.preload = 'metadata'; if(clip.kind==='image')thumb.alt=clip.name;
-    const title = document.createElement('div'); title.textContent = clip.name; asset.append(thumb, title); $('library').append(asset);
+    $('library').append(libraryAsset(clip,index));
   });
   if (!clips.length) {
     $('timeline').innerHTML = '<div class="timeline-empty">Os clips aparecem aqui, pela ordem do filme.</div>';
@@ -301,7 +349,7 @@ $('remove').onclick = () => {
   pause(); const [clip] = clips.splice(selected, 1); clip.video.pause(); clip.gain?.disconnect(); URL.revokeObjectURL(clip.url);
   selected = Math.min(selected, clips.length - 1); time = Math.min(time, duration()); render(); seek(time).catch(error => status(error.message));
 };
-function move(direction) { const target = selected + direction; if (target < 0 || target >= clips.length) return; pause(); [clips[selected], clips[target]] = [clips[target], clips[selected]]; selected = target; render(); seek(time).catch(error => status(error.message)); }
+function move(direction) { return reorderClip(selected,selected+direction); }
 $('left').onclick = () => move(-1); $('right').onclick = () => move(1);
 $('split').onclick = async () => {
   pause(); const position = locate(time); if (!position) return; const clip = clips[position.i];
