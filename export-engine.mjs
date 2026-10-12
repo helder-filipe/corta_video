@@ -10,7 +10,7 @@ export function frameRange(start, end, fps) {
 export async function exportFilm({ clips, music, musicVolume, width, height, fps, format,
   includeAudio, writable, signal, paintText, paintVideoFrame, onProgress }) {
   const check = () => { if (signal.aborted) throw new DOMException('Exportação cancelada.', 'AbortError'); };
-  const inputs = new Map();
+  const inputs = new Map(), images = new Map();
   let output;
   const total = clips.reduce((n, c) => n + c.end - c.start, 0);
   const codec = format === 'mp4' ? 'avc' : 'vp8';
@@ -32,11 +32,14 @@ export async function exportFilm({ clips, music, musicVolume, width, height, fps
     }
     onProgress(0, 'A preparar vídeos e áudio…');
     for (const c of clips) {
+      if(c.kind==='image'){
+        check();if(!images.has(c.file))images.set(c.file,await createImageBitmap(c.file));continue;
+      }
       check(); const e = await inspect(c.file);
       if (!e.video || !await e.video.canDecode()) throw new Error(`Não foi possível descodificar «${c.name}». Converte o original para MP4 H.264.`);
     }
     if (music && includeAudio) await inspect(music.file);
-    const hasAudio = includeAudio && (clips.some(c => inputs.get(c.file).audio && c.volume > 0) || (music && musicVolume > 0 && inputs.get(music.file).audio));
+    const hasAudio = includeAudio && (clips.some(c => inputs.get(c.file)?.audio && c.volume > 0) || (music && musicVolume > 0 && inputs.get(music.file).audio));
     if (hasAudio && !await canEncodeAudio(audioCodec, { numberOfChannels: 2, sampleRate: 48000, bitrate: 192000 })) {
       throw new Error(`O navegador não suporta áudio ${audioCodec.toUpperCase()}. Escolhe ${format === 'mp4' ? 'WebM' : 'MP4'} ou desmarca «Incluir áudio».`);
     }
@@ -72,7 +75,7 @@ export async function exportFilm({ clips, music, musicVolume, width, height, fps
       let offset = 0;
       for (const c of clips) {
         const a = Math.max(start, offset), b = Math.min(end, offset + c.end - c.start);
-        if (b > a) await schedule(inputs.get(c.file), c.start + a - offset, c.start + b - offset, a, c.volume);
+        if (b > a && c.kind!=='image') await schedule(inputs.get(c.file), c.start + a - offset, c.start + b - offset, a, c.volume);
         offset += c.end - c.start;
       }
       if (music && musicVolume > 0) {
@@ -100,10 +103,11 @@ export async function exportFilm({ clips, music, musicVolume, width, height, fps
       const end = offset + c.end - c.start;
       const [first, stop] = frameRange(offset, end, fps);
       // Keep the source aspect ratio: the shared painter handles crop and placement.
-      const sink = new CanvasSink(inputs.get(c.file).video, { poolSize: 2 });
+      const sink = c.kind==='image'?null:new CanvasSink(inputs.get(c.file).video, { poolSize: 2 });
       function* timestamps() { for (let i = first; i < stop; i++) yield c.start + i / fps - offset; }
+      async function* imageFrames(){for(let i=first;i<stop;i++)yield {canvas:images.get(c.file)};}
       let index = first;
-      for await (const frame of sink.canvasesAtTimestamps(timestamps())) {
+      for await (const frame of sink?sink.canvasesAtTimestamps(timestamps()):imageFrames()) {
         check();
         if (!frame) throw new Error(`Falta um fotograma em «${c.name}». Ajusta o início do corte.`);
         const t = index / fps;
@@ -136,5 +140,6 @@ export async function exportFilm({ clips, music, musicVolume, width, height, fps
     throw error;
   } finally {
     for (const entry of inputs.values()) entry.input.dispose();
+    for (const bitmap of images.values()) bitmap.close();
   }
 }

@@ -154,6 +154,7 @@ function pause() {
 }
 
 function seekVideo(video, target) {
+  if(video.isStillImage){video.currentTime=target;return Promise.resolve();}
   return new Promise((resolve, reject) => {
     if (Math.abs(video.currentTime - target) < .000001 && video.readyState >= 2) { resolve(); return; }
     const timer = setTimeout(() => { clean(); reject(new Error('Não foi possível ler este ponto do ficheiro.')); }, 10000);
@@ -202,7 +203,7 @@ async function play() {
   if (!clips.length || busy) return; if (time >= duration() - .02) time = 0; busy = true;
   try {
     if (!audioCtx) audioCtx = new AudioContext(); await audioCtx.resume();
-    clips.forEach(clip => { if (!clip.gain) clip.gain = connect(clip.video); clip.gain.gain.value = clip.volume; });
+    clips.forEach(clip => { if(clip.kind==='image')return; if (!clip.gain) clip.gain = connect(clip.video); clip.gain.gain.value = clip.volume; });
     if (music) { if (!musicGain) musicGain = connect(music.video); musicGain.gain.value = +$('musicVolume').value; }
     const position = locate(time); current = position.i; await seekVideo(clips[current].video, position.local); await clips[current].video.play();
     await syncMusic(time, true);
@@ -243,7 +244,7 @@ function render() {
   $('empty').hidden = clips.length > 0; $('seek').max = total; $('timeline').replaceChildren(); $('library').replaceChildren();
   clips.forEach((clip, index) => {
     const asset = document.createElement('div'); asset.className = 'asset';
-    const thumb = document.createElement('video'); thumb.src = clip.url; thumb.muted = true; thumb.preload = 'metadata';
+    const thumb = document.createElement(clip.kind==='image'?'img':'video'); thumb.src = clip.url; thumb.muted = true; thumb.preload = 'metadata'; if(clip.kind==='image')thumb.alt=clip.name;
     const title = document.createElement('div'); title.textContent = clip.name; asset.append(thumb, title); $('library').append(asset);
   });
   if (!clips.length) {
@@ -253,10 +254,14 @@ function render() {
   const clip = clips[selected]; $('selected').textContent = clip ? clip.name : 'Seleciona um clip na linha de tempo.';
   ['trimStart', 'trimEnd'].forEach(id => $(id).disabled = !clip); $('trimStart').value = clip ? clip.start.toFixed(3) : ''; $('trimEnd').value = clip ? clip.end.toFixed(3) : '';
   $('clipVolume').value = clip ? clip.volume : 1; ['split', 'remove', 'left', 'right', 'applyTrim'].forEach(id => $(id).disabled = !clip);
+  $('clipVolume').disabled=!clip||clip.kind==='image';
+  $('imageDurationLabel').hidden=clip?.kind!=='image';
+  $('imageDuration').value=clip?.kind==='image'?(clip.end-clip.start).toFixed(3):'5';
   $('export').disabled = !clips.length; updateTransitionControls(); renderTimeline(); draw();
 }
 
 function media(file, isAudio = false) {
+  if(!isAudio&&isImageFile(file))return imageMedia(file);
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file), mediaElement = document.createElement(isAudio ? 'audio' : 'video');
     mediaElement.preload = 'auto'; mediaElement.playsInline = true;
@@ -273,7 +278,7 @@ function media(file, isAudio = false) {
 }
 
 $('files').onchange = async event => {
-  if (exporting) return; pause(); status('A importar vídeos…');
+  if (exporting||busy) return; pause(); status('A importar vídeos e imagens…');
   for (const file of event.target.files) {
     try { const clip = await media(file); clips.push(clip); selected = clips.length - 1; status(`${clips.length} clips prontos a editar`); }
     catch (error) { status(error.message); }
@@ -378,3 +383,10 @@ $('forwardMs').onclick = () => seek(Math.round((time + .001) * 1000) / 1000).cat
   const offset = clips.slice(0, selected).reduce((sum, item) => sum + item.end - item.start, 0);
   seek(offset + clamp(local - clip.start, 0, clip.end - clip.start), {index: selected, local}).catch(error => status(error.message));
 }));
+
+$('imageDuration').onchange=async()=>{
+ const c=clips[selected],value=Number($('imageDuration').value);
+ if(busy||exporting||c?.kind!=='image')return;
+ if(!Number.isFinite(value)||value<.05||c.start+value>86400){status('Define uma duração entre 0,050 s e o limite de 24 horas da imagem.');render();return;}
+ pause();window.CortaEditor?.record('alterar duração da imagem');c.end=c.start+value;render();await seek(Math.min(time,duration()));status('Duração da imagem atualizada.');
+};

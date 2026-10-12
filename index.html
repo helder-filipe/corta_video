@@ -22,8 +22,8 @@
   <aside>
     <div class="eyebrow">O TEU ESTÚDIO</div>
     <h1>Da ideia ao filme.</h1><p class="muted">Um corte de cada vez.</p>
-    <label class="import">＋ Importar vídeos<input id="files" type="file" accept="video/*" multiple hidden></label>
-    <p class="hint">MP4, MOV e WebM compatíveis com o navegador</p>
+    <label class="import">＋ Importar vídeos e imagens<input id="files" type="file" accept="video/*,image/png,image/jpeg,image/webp,image/avif,image/bmp,image/gif" multiple hidden></label>
+    <p class="hint">Vídeos e imagens PNG, JPEG, WebP, AVIF, BMP e GIF (imagem fixa)</p>
     <div class="section-title">Biblioteca <span id="count">0 clips</span></div>
     <div id="library" class="library"><div class="empty-small">Os teus vídeos começam aqui.<br>Importa um ou vários clips.</div></div>
     <div class="privacy">◈ Os ficheiros ficam no teu dispositivo.</div>
@@ -37,7 +37,7 @@
       <div id="customRatio" class="two" hidden><label>Proporção — largura<input id="ratioWidth" type="number" min="1" max="32" step="1" value="16"></label><label>Proporção — altura<input id="ratioHeight" type="number" min="1" max="32" step="1" value="9"></label></div>
       <div id="framePosition" class="two" hidden><label>Enquadramento horizontal<input id="frameX" type="range" min="0" max="100" value="50"></label><label>Enquadramento vertical<input id="frameY" type="range" min="0" max="100" value="50"></label></div>
     </div>
-    <div class="stage"><canvas id="canvas" width="960" height="540"></canvas><div id="empty"><div class="empty-icon">▷</div><h2>Espaço para a tua próxima história.</h2><p>Importa vídeos para começar a editar.</p><button id="start">Escolher vídeos ↗</button></div></div>
+    <div class="stage"><canvas id="canvas" width="960" height="540"></canvas><div id="empty"><div class="empty-icon">▷</div><h2>Espaço para a tua próxima história.</h2><p>Importa vídeos ou imagens para começar a editar.</p><button id="start">Escolher vídeos ou imagens ↗</button></div></div>
     <div class="transport"><button id="rewind" title="Voltar ao início" aria-label="Voltar ao início">↤</button><button id="play" class="play" aria-label="Reproduzir">▶</button><span id="time">00:00 / 00:00</span><span class="spacer"></span><span id="previewRatio" class="hint">Pré-visualização · 16:9</span></div>
     <div class="precise-controls"><label>Posição exata no filme (s)<input id="preciseTime" type="number" min="0" step="0.001" value="0.000"></label><button id="backMs" type="button">−1 ms</button><button id="forwardMs" type="button">+1 ms</button></div><p id="preciseFeedback" class="hint" role="status">Escolhe um instante às milésimas. A imagem mostra o fotograma disponível nesse instante.</p>
     <div class="timeline-head"><h2>Linha de tempo</h2><div><button id="split">✂ Dividir aqui</button><button id="remove">Eliminar clip</button></div></div>
@@ -60,6 +60,7 @@
     <section>
       <h2>Clip selecionado</h2><p id="selected" class="muted">Seleciona um clip na linha de tempo.</p>
       <div class="two"><label>Entrada (s)<input id="trimStart" type="number" min="0" step="0.001" disabled></label><label>Saída (s)<input id="trimEnd" type="number" min="0" step="0.001" disabled></label></div>
+      <label id="imageDurationLabel" hidden>Duração da imagem (s)<input id="imageDuration" type="number" min="0.05" max="86400" step="0.001" value="5"></label>
       <button id="applyTrim">Aplicar corte</button>
       <div class="two"><button id="left">← Mover</button><button id="right">Mover →</button></div>
       <label class="range-label">Som original <input id="clipVolume" type="range" min="0" max="1" step="0.05" value="1"></label>
@@ -122,7 +123,7 @@
 </dialog>
 <dialog id="previewDialog" aria-labelledby="previewTitle"><div class="preview-heading"><h2 id="previewTitle">Pré-visualização</h2><button id="closePreview">Fechar visualização · Esc</button></div><div id="previewContent"></div></dialog>
 <dialog id="resultDialog" aria-labelledby="resultTitle"><div class="preview-heading"><h2 id="resultTitle">Vídeo exportado</h2><button id="closeResult">Fechar visualização · Esc</button></div><video id="resultVideo" controls playsinline></video></dialog>
-<script src="timeline.js"></script><script src="app.js"></script><script src="formats.js"></script><script src="text-animations.js"></script><script src="export-ui.js"></script>
+<script src="image-media.js"></script><script src="timeline.js"></script><script src="app.js"></script><script src="formats.js"></script><script src="text-animations.js"></script><script src="export-ui.js"></script>
 <script src="subtitle-projects.js"></script><script src="subtitles-core.js"></script><script src="subtitles.js"></script>
 </body>
 </html>

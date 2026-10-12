@@ -32,7 +32,7 @@
   $('saveProject').onclick=()=>transaction(async()=>{
     const {packProject}=await import('./project-file.mjs'),files=[],map=new Map();
     const asset=f=>{if(!map.has(f)){map.set(f,files.length);files.push(f);}return map.get(f);};
-    const clip=c=>({asset:asset(c.file),name:c.name,start:c.start,end:c.end,volume:c.volume,transition:c.transition,transitionDuration:c.transitionDuration,timelineStart:c.timelineStart,loop:c.loop});
+    const clip=c=>({asset:asset(c.file),kind:c.kind||'video',name:c.name,start:c.start,end:c.end,volume:c.volume,transition:c.transition,transitionDuration:c.transitionDuration,timelineStart:c.timelineStart,loop:c.loop});
     const subtitles=CortaSubtitles.snapshot();const state={clips:clips.map(clip),music:music?clip(music):null,values:values(),subtitles,selected,time,fonts:[...fonts].filter(([a])=>a===subtitles.style.font).map(([alias,f])=>({alias,asset:asset(f)}))};
     const blob=packProject(state,files),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=($('project').value||'Projeto').replace(/[<>:"/\\|?*]/g,'_')+'.corta';a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);status('Projeto preparado para guardar com vídeos, legendas, transições e ajustes.');
   });
