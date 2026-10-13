@@ -13,3 +13,7 @@ Biblioteca: numeração, seleção visível, arrasto com linha de inserção e b
 ## Textos múltiplos e acompanhamento — 2026-10-13
 
 Painel Texto: botões Adicionar texto/Remover texto e seletor Texto a editar. Adicionar usa a posição do cursor, sem substituir o anterior. Cada título tem uma barra selecionável e recortável; sobreposições ocupam linhas distintas. Acompanhar reprodução está ativo por omissão junto ao zoom.
+
+## Guardar como — 2026-10-13
+
+O botão Guardar projeto abre a janela nativa Guardar como. A mensagem de sucesso só aparece depois de fechar a escrita.

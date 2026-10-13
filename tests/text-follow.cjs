@@ -7,9 +7,16 @@ const w=dom.window,context=dom.getInternalVMContext();
 const run=code=>vm.runInContext(code,context);
 const $=id=>w.document.getElementById(id);
 const flush=async()=>{for(let i=0;i<12;i++)await new Promise(r=>setTimeout(r,0));};
-let blobResult;
+let blobResult,pickerCalls=0,writes=0,closed=0,aborted=0,downloadCalls=0,pickerMode='save',pickerOptions;
+w.HTMLAnchorElement.prototype.click=function(){downloadCalls++;};
+w.showSaveFilePicker=async options=>{
+  pickerCalls++;pickerOptions=options;
+  if(pickerMode==='cancel')throw new w.DOMException('Cancelado','AbortError');
+  if(pickerMode==='denied')throw new w.DOMException('Sem acesso','NotAllowedError');
+  return {createWritable:async()=>({write:async blob=>{if(pickerMode==='write-error')throw Error('Disco cheio');writes++;blobResult=blob;},close:async()=>{closed++;},abort:async()=>{aborted++;}})};
+};
 w.URL.createObjectURL=blob=>{blobResult=blob;return 'blob:test'};w.URL.revokeObjectURL=()=>{};
-w.HTMLAnchorElement.prototype.click=function(){};
+
 w.HTMLMediaElement.prototype.pause=function(){};w.HTMLMediaElement.prototype.load=function(){};
 w.HTMLMediaElement.prototype.play=async function(){};
 w.HTMLDialogElement.prototype.showModal=function(){this.open=true};w.HTMLDialogElement.prototype.close=function(){this.open=false};
@@ -84,5 +91,15 @@ $('followPlayhead').checked=false;viewport.scrollLeft=0;run('time=10;updateTimel
 $('followPlayhead').checked=true;run('playing=false;updateTimelinePlayhead()');assert.equal(viewport.scrollLeft,0);
 viewport.scrollLeft=600;run('playing=true;time=0;updateTimelinePlayhead()');assert.equal(viewport.scrollLeft,0);run('pause()');
 console.log('PASS: independent titles, timeline selection/trim/undo, rendering at different times, explicit animation preview, save/open/legacy, overlapping lanes and playback follow opt-out/pause/restart.');
+// Save As always opens, writes only after selection, and never downloads on failure.
+const before=pickerCalls;await $('saveProject').onclick();assert.equal(pickerCalls,before+1);assert.ok(pickerOptions.suggestedName.endsWith('.corta'));assert.equal(writes,closed);
+const initialWrites=writes,initialDownloads=downloadCalls;
+pickerMode='cancel';await $('saveProject').onclick();assert.equal(writes,initialWrites);assert.equal(downloadCalls,initialDownloads);assert.match($('status').textContent,/cancelado/);assert.equal(run('busy'),false);
+pickerMode='denied';await $('saveProject').onclick();assert.equal(writes,initialWrites);assert.equal(downloadCalls,initialDownloads);assert.match($('status').textContent,/Não foi possível abrir/);
+pickerMode='write-error';await $('saveProject').onclick();assert.equal(aborted,1);assert.equal(downloadCalls,initialDownloads);assert.match($('status').textContent,/Disco cheio/);assert.equal(run('busy'),false);
+// Unsupported browsers may download only after explicit confirmation.
+delete w.showSaveFilePicker;w.confirm=()=>false;await $('saveProject').onclick();assert.equal(downloadCalls,initialDownloads);
+w.confirm=()=>true;await $('saveProject').onclick();assert.equal(downloadCalls,initialDownloads+1);
+console.log('PASS: Save As, project roundtrip, cancellation, access/write errors, stream abort and explicit unsupported-browser fallback.');
 dom.window.close();
 })().catch(e=>{console.error(e);process.exit(1)});

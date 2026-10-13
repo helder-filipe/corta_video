@@ -18,3 +18,7 @@ libraryAsset desenha cada entrada. reorderClip é a operação comum para a bibl
 ## Textos múltiplos e acompanhamento — 2026-10-13
 
 app.js mantém textClips e selectedText. paintText compõe todos os títulos ativos e aceita um título explícito para a amostra de animação. subtitle-projects.js guarda a lista e inclui-a no histórico; projetos antigos migram o título dos campos values. timeline.js usa índices de texto e distribui sobreposições por faixas, seguindo horizontalmente o cursor durante play.
+
+## Guardar como — 2026-10-13
+
+subtitle-projects.js abre showSaveFilePicker durante a ativação do clique e antes do import. O Blob .corta é escrito com createWritable/write/close; erros abortam a escrita quando possível.

@@ -30,11 +30,38 @@
   $('captionImportFont').onclick=()=>{if(!busy&&!exporting)$('captionFontFile').click();};
   $('captionFontFile').onchange=e=>{const file=e.target.files[0];e.target.value='';if(file)transaction(async()=>{const alias=await loadFont(file);record('importar fonte');const s=CortaSubtitles.snapshot();s.style.font=alias;CortaSubtitles.restore(s);});};
   $('saveProject').onclick=()=>transaction(async()=>{
+    const name=($('project').value.trim()||'Projeto').replace(/[<>:"/\\|?*\x00-\x1f]/g,'_')+'.corta';
+    validateTexts(textSnapshot());
+    let handle;
+    if(typeof window.showSaveFilePicker==='function') {
+      try {
+        // Open before imports or other asynchronous work: retain click activation.
+        handle=await window.showSaveFilePicker({suggestedName:name,types:[{description:'Projeto Corta Studio',accept:{'application/octet-stream':['.corta']}}]});
+      } catch(error) {
+        status(error.name==='AbortError'?'Guardar projeto cancelado.':'Não foi possível abrir «Guardar como»: '+error.message);
+        return;
+      }
+    } else if(!window.confirm('Este navegador não permite abrir «Guardar como» diretamente. Para escolher sempre a pasta, usa o Chrome ou o Edge. Queres transferir o projeto usando as definições de transferências deste navegador?')) {
+      status('Guardar projeto cancelado.');return;
+    }
     const {packProject}=await import('./project-file.mjs'),files=[],map=new Map();
     const asset=f=>{if(!map.has(f)){map.set(f,files.length);files.push(f);}return map.get(f);};
     const clip=c=>({asset:asset(c.file),kind:c.kind||'video',name:c.name,start:c.start,end:c.end,volume:c.volume,transition:c.transition,transitionDuration:c.transitionDuration,timelineStart:c.timelineStart,loop:c.loop});
     const subtitles=CortaSubtitles.snapshot();const state={clips:clips.map(clip),music:music?clip(music):null,values:values(),texts:validateTexts(textSnapshot()),subtitles,selected,time,fonts:[...fonts].filter(([a])=>a===subtitles.style.font).map(([alias,f])=>({alias,asset:asset(f)}))};
-    const blob=packProject(state,files),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=($('project').value||'Projeto').replace(/[<>:"/\\|?*]/g,'_')+'.corta';a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);status('Projeto preparado para guardar com vídeos, legendas, transições e ajustes.');
+    const blob=packProject(state,files);
+    if(handle) {
+      let writable;
+      try {
+        writable=await handle.createWritable();await writable.write(blob);await writable.close();
+        status('Projeto guardado na localização escolhida.');
+      } catch(error) {
+        if(writable)try{await writable.abort();}catch{}
+        throw Error('Não foi possível guardar o projeto: '+error.message);
+      }
+    } else {
+      const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();
+      setTimeout(()=>URL.revokeObjectURL(url),60000);status('Transferência do projeto iniciada.');
+    }
   });
   $('openProject').onclick=()=>{if(!busy&&!exporting)$('projectInput').click();};
   $('projectInput').onchange=e=>{const file=e.target.files[0];e.target.value='';if(!file)return;transaction(async()=>{

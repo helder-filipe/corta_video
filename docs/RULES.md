@@ -15,3 +15,7 @@ Biblioteca e timeline usam sempre o mesmo array clips. Recusar reordenações du
 ## Textos múltiplos e acompanhamento — 2026-10-13
 
 Textos partilham o relógio do projeto, mantendo estilos e intervalos independentes. Não deslocar automaticamente a timeline em pausa, durante exportação/recorte ou quando Acompanhar reprodução estiver desligado. Validar listas carregadas antes de substituir o estado do projeto.
+
+## Guardar como — 2026-10-13
+
+Cancelar o seletor ou falhar a gravação nunca deve iniciar automaticamente uma transferência. Em navegadores sem seletor, pedir confirmação explícita para a transferência convencional.

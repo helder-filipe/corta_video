@@ -13,3 +13,7 @@ Validação: testes de integração passaram para duração, relógio, pausa, di
 ## Textos múltiplos e acompanhamento — 2026-10-13
 
 Pedido de 13/10/2026: acrescentar textos em vários pontos do vídeo e manter o cursor de reprodução visível na timeline. Corrigido também o wrapper das legendas, que descartava as definições explícitas da amostra de animação de texto. Testes de regressão incluem legendas, imagens, reordenação e projetos. Não foi feita validação visual num navegador real nem codificação real nesta alteração.
+
+## Guardar como — 2026-10-13
+
+13/10/2026: substituída a transferência automática do projeto pelo seletor de nome/pasta. Mantido o formato .corta e o conteúdo completo. Sem ensaio da janela nativa num navegador real. Deployment anterior ab12d57 confirmado pelo estado Vercel no GitHub.
