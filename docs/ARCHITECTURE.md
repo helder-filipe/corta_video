@@ -14,3 +14,7 @@ Os clips de imagem usam kind=image, duração inicial de 5 s e volume 0. O reló
 ## Reordenação na biblioteca
 
 libraryAsset desenha cada entrada. reorderClip é a operação comum para a biblioteca e os botões Mover do painel; altera o array clips numa transação com histórico e reposiciona a pré-visualização no clip movido.
+
+## Textos múltiplos e acompanhamento — 2026-10-13
+
+app.js mantém textClips e selectedText. paintText compõe todos os títulos ativos e aceita um título explícito para a amostra de animação. subtitle-projects.js guarda a lista e inclui-a no histórico; projetos antigos migram o título dos campos values. timeline.js usa índices de texto e distribui sobreposições por faixas, seguindo horizontalmente o cursor durante play.

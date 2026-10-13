@@ -15,3 +15,7 @@ Fora deste pedido: animação GIF, movimento Ken Burns e faixas de sobreposiçã
 - [x] Integração com Desfazer e persistência.
 - [x] Testes de arrasto nos dois sentidos, ordem da timeline, seleção/cursor, bloqueio durante exportação e guardar/reabrir.
 - [ ] Confirmar deployment da atualização no Vercel.
+
+## Textos múltiplos e acompanhamento — 2026-10-13
+
+Implementado e validado: vários títulos, seleção, recorte, remoção, Desfazer, persistência e migração do título antigo; seguimento horizontal com opção de desativação. Testes DOM/canvas/media simulados passaram. Publicação em produção ainda depende da confirmação do Vercel; ligação tem recusado acesso (403).

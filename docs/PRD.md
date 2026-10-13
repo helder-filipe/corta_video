@@ -12,3 +12,7 @@ Editor local de vídeos, imagens, música, títulos e legendas. Os ficheiros fic
 ## Reordenação na biblioteca
 
 Reordenar vídeos e imagens diretamente na biblioteca por arrastar ou botões ↑/↓; refletir a mesma ordem na timeline, exportação e projeto. Permitir Desfazer.
+
+## Textos múltiplos e acompanhamento — 2026-10-13
+
+Permitir vários textos independentes ao longo do filme, com seleção, remoção, tempos e animações próprios. Acompanhar o cursor na timeline durante a reprodução, com opção para desligar.

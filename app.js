@@ -85,12 +85,56 @@ function paintVideoFrame(context, surface, image, clipIndex, projectTime, list =
   context.restore();
 }
 
+let textClips = [], selectedText = -1;
+const textFields = {text:'text',start:'textStart',end:'textEnd',motion:'textMotion',effect:'textEffect',size:'fontSize',color:'color',position:'position',animationDuration:'textAnimationDuration'};
+function textSnapshot() { return {items:textClips.map(t=>({...t})),selected:selectedText}; }
+function validateTexts(data) {
+  if (!data || !Array.isArray(data.items) || data.items.length > 10000) throw Error('Lista de textos inválida.');
+  const items=data.items.map(t=>{
+    if (!t || typeof t.text!=='string' || !Number.isFinite(t.start) || !Number.isFinite(t.end) || t.start<0 || t.end<=t.start) throw Error('Confirma os tempos de todos os textos.');
+    const result={...t};
+    for(const [key,id] of Object.entries(textFields)) {
+      const field=$(id);
+      if(field.tagName==='SELECT' && ![...field.options].some(o=>o.value===result[key])) result[key]=field.options[0].value;
+    }
+    result.size=clamp(Number(t.size)||56,16,160);result.animationDuration=clamp(Number(t.animationDuration)||.6,.1,5);
+    result.color=/^#[0-9a-f]{6}$/i.test(t.color)?t.color:'#ffffff';
+    return result;
+  });
+  return {items,selected:items.length?clamp(Number.isInteger(data.selected)?data.selected:0,0,items.length-1):-1};
+}
+function restoreTexts(data) {
+  // Older projects stored their single title in the form values.
+  const state=data===undefined?{items:$('text').value.trim()?[textSettings()]:[],selected:0}:data;
+  textClips=state.items.map(t=>({...t}));selectedText=textClips.length?Math.max(0,state.selected):-1;
+  loadTextFields();
+}
+function loadTextFields() {
+  const item=textClips[selectedText];
+  if(item)for(const [key,id] of Object.entries(textFields))$(id).value=item[key];
+  else $('text').value='';
+  renderTextList();
+  if(typeof syncAnimationChoices==='function')syncAnimationChoices();
+}
+function renderTextList() {
+  const list=$('textList');list.replaceChildren();
+  textClips.forEach((t,i)=>list.add(new Option(`${i+1}. ${t.text.trim().replace(/\n/g,' ').slice(0,45)||'Novo texto'} · ${format(t.start)}–${format(t.end)}`,String(i))));
+  list.value=String(selectedText);list.disabled=!textClips.length;$('removeText').disabled=selectedText<0;
+}
+function selectText(index) {
+  if(busy||exporting||!textClips[index])return;
+  selectedText=index;loadTextFields();renderTimeline();draw();
+}
 function textSettings() {
   return { text: $('text').value.trim(), start: +$('textStart').value, end: +$('textEnd').value,
     motion: $('textMotion').value, effect: $('textEffect').value, size: +$('fontSize').value || 56,
     color: $('color').value, position: $('position').value, animationDuration: +$('textAnimationDuration').value || .6 };
 }
-function paintText(context, surface, projectTime, settings = textSettings()) {
+function paintText(context, surface, projectTime, settings) {
+  if(settings) { paintSingleText(context,surface,projectTime,settings); return; }
+  for(const item of textClips)paintSingleText(context,surface,projectTime,item);
+}
+function paintSingleText(context, surface, projectTime, settings) {
   let text = settings.text;
   const start = settings.start, end = settings.end;
   if (!text || projectTime < start || projectTime >= end || end <= start) return;
@@ -409,11 +453,26 @@ $('removeMusic').onclick = () => {
 };
 
 function updateTextTrack() {
-  const text = $('text').value.trim(), motion = $('textMotion').selectedOptions[0].textContent;
-  $('text-track').textContent = text ? `${text.replace(/\n/g, ' ')} · ${+$('textStart').value || 0}–${+$('textEnd').value || 0} s · ${motion}` : 'O teu título, no momento certo';
-  $('text-track').className = text ? 'filled' : ''; renderTimeline(); draw();
+  if(busy||exporting)return;
+  const next=textSettings();
+  if(selectedText<0 && !next.text)return;
+  if(JSON.stringify(textClips[selectedText])===JSON.stringify(next))return;
+  window.CortaEditor?.record('editar texto');
+  if(selectedText<0){selectedText=textClips.length;textClips.push(next);}else textClips[selectedText]=next;
+  renderTextList();renderTimeline();draw();
 }
-['text', 'textStart', 'textEnd', 'fontSize', 'color', 'position', 'textMotion', 'textEffect'].forEach(id => $(id).oninput = updateTextTrack);
+['text', 'textStart', 'textEnd', 'fontSize', 'color', 'position', 'textMotion', 'textEffect','textAnimationDuration'].forEach(id => $(id).oninput = updateTextTrack);
+$('addText').onclick=()=>{
+  if(busy||exporting)return;pause();window.CortaEditor?.record('adicionar texto');
+  const start=Math.max(0,Math.min(time,Math.max(0,duration()-.05)));
+  textClips.push({...textSettings(),text:'',start,end:Math.max(start+.05,Math.min(duration()||start+3,start+3))});
+  selectedText=textClips.length-1;loadTextFields();renderTimeline();draw();$('text').focus();
+};
+$('removeText').onclick=()=>{
+  if(busy||exporting||selectedText<0)return;pause();window.CortaEditor?.record('remover texto');
+  textClips.splice(selectedText,1);selectedText=Math.min(selectedText,textClips.length-1);loadTextFields();renderTimeline();draw();
+};
+$('textList').onchange=()=>selectText(Number($('textList').value));
 $('textStartAtCursor').onclick = () => { $('textStart').value = time.toFixed(3); if (+$('textEnd').value <= time) $('textEnd').value = Math.min(duration() || time + 3, time + 3).toFixed(3); updateTextTrack(); };
 $('textEndAtCursor').onclick = () => { $('textEnd').value = Math.max(time, +$('textStart').value + .1).toFixed(3); updateTextTrack(); };
 

@@ -9,3 +9,7 @@ Mensagens em português europeu. Tempos com três casas decimais. Imagens animad
 ## Reordenação na biblioteca
 
 Biblioteca: numeração, seleção visível, arrasto com linha de inserção e botões acessíveis ↑/↓. Manter foco no controlo equivalente depois de mover. Texto, música e legendas mantêm os seus tempos globais; rever sincronização após mudar a ordem.
+
+## Textos múltiplos e acompanhamento — 2026-10-13
+
+Painel Texto: botões Adicionar texto/Remover texto e seletor Texto a editar. Adicionar usa a posição do cursor, sem substituir o anterior. Cada título tem uma barra selecionável e recortável; sobreposições ocupam linhas distintas. Acompanhar reprodução está ativo por omissão junto ao zoom.

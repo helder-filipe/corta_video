@@ -9,3 +9,7 @@ Validação: testes de integração passaram para duração, relógio, pausa, di
 ## Reordenação na biblioteca
 
 2026-10-12: pedido de reordenação na biblioteca com efeito na timeline. Implementação reutiliza clips sem duplicar os ficheiros. Reordenação preserva transições associadas a cada clip e não desloca legendas/música globalmente.
+
+## Textos múltiplos e acompanhamento — 2026-10-13
+
+Pedido de 13/10/2026: acrescentar textos em vários pontos do vídeo e manter o cursor de reprodução visível na timeline. Corrigido também o wrapper das legendas, que descartava as definições explícitas da amostra de animação de texto. Testes de regressão incluem legendas, imagens, reordenação e projetos. Não foi feita validação visual num navegador real nem codificação real nesta alteração.

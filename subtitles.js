@@ -163,7 +163,7 @@
   window.addEventListener('beforeunload',e=>{if(data.cues.length){e.preventDefault();e.returnValue='';}});
   for(const id of ['play','rewind','goTime','split','remove'])$(id)?.addEventListener('click',()=>{previewEnd=null;},true);
   $('seek').addEventListener('input',()=>{previewEnd=null;},true);
-  const basePaint=paintText;paintText=function(ctx,surface,t){basePaint(ctx,surface,t);core.paint(ctx,surface,t,data,surface!==canvas);};
+  const basePaint=paintText;paintText=function(ctx,surface,t,settings){basePaint(ctx,surface,t,settings);if(settings)return;core.paint(ctx,surface,t,data,surface!==canvas);};
   const baseRender=render;render=function(){baseRender();refresh();};
   $('timelineZoom').addEventListener('input',refresh);
   // Commit drafts before project/video export. Invalid drafts stop the action.

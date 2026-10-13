@@ -74,3 +74,5 @@ main{grid-template-columns:258px minmax(440px,1fr) 340px}
 .library-select span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
 .library-item .library-select img,.library-item .library-select video{width:48px;height:38px;object-fit:cover;flex-shrink:0;pointer-events:none;border-radius:4px}
 .library-order{display:flex;flex-direction:column;gap:3px;flex-shrink:0}.library-order button{padding:3px 8px;min-width:30px;font-size:14px;line-height:1.2}
+
+.text-help{font-size:12px;line-height:1.5;color:#a4a8b2}

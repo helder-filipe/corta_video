@@ -6,7 +6,14 @@ function timelineScale() { return Number(document.getElementById('timelineZoom')
 function timelineClock(value) { return Math.max(0, value).toFixed(3).replace('.', ',') + ' s'; }
 function updateTimelinePlayhead() {
   const head = $('timelinePlayhead'); if (!head) return;
-  head.hidden = !clips.length; head.style.left = `${timelineInset + time * timelineScale()}px`;
+  const x=timelineInset + time * timelineScale();
+  head.hidden = !clips.length; head.style.left = `${x}px`;
+  const viewport=$('timelineScroll');
+  if(playing && !exporting && !timelineGesture && $('followPlayhead').checked && viewport.clientWidth>0) {
+    const margin=Math.min(100,viewport.clientWidth*.2),left=viewport.scrollLeft;
+    if(x>left+viewport.clientWidth-margin || x<left+margin)
+      viewport.scrollLeft=Math.max(0,Math.min(viewport.scrollWidth-viewport.clientWidth,x-margin));
+  }
 }
 function timelineItemState(kind, index) {
   if (kind === 'video') {
@@ -14,7 +21,8 @@ function timelineItemState(kind, index) {
     return { start: clip.start, end: clip.end, at: clips.slice(0, index).reduce((n, c) => n + c.end - c.start, 0), max: clip.video.duration };
   }
   if (kind === 'audio') return { start: music.start, end: music.end, at: music.timelineStart || 0, max: music.video.duration };
-  return { start: +$('textStart').value || 0, end: +$('textEnd').value || 0, at: +$('textStart').value || 0, max: Math.max(duration(), +$('textEnd').value || 0, .1) };
+  const text=textClips[index];
+  return {start:text.start,end:text.end,at:text.start,max:Math.max(duration(),text.end,.1)};
 }
 function trimValues(original, kind, edge, delta) {
   const result = { ...original };
@@ -36,7 +44,7 @@ function applyTimelineValues(kind, index, values) {
     music.start = values.start; music.end = values.end; music.timelineStart = values.at;
     $('musicTrimStart').value = values.start.toFixed(3); $('musicTrimEnd').value = values.end.toFixed(3); $('musicTimelineStart').value = values.at.toFixed(3);
   } else {
-    $('textStart').value = values.start.toFixed(3); $('textEnd').value = values.end.toFixed(3);
+    textClips[index].start=values.start;textClips[index].end=values.end;selectedText=index;loadTextFields();
   }
 }
 function timelineFeedback(kind, values) {
@@ -82,6 +90,7 @@ function startTimelineGesture(event, kind, index, edge, handle) {
   if (event.button !== 0 || exporting || busy) return;
   event.preventDefault(); event.stopPropagation(); pause();
   if (kind === 'video') { selected = index; $('selected').textContent = clips[index].name; updateTransitionControls(); }
+  if(kind==='text'){window.CortaEditor?.record('recortar texto');selectedText=index;loadTextFields();}
   const original = timelineItemState(kind, index);
   timelineGesture = { kind, index, edge, handle, original, pointerId: event.pointerId, x: event.clientX, scroll: $('timelineScroll').scrollLeft, scale: timelineScale() };
   handle.setPointerCapture(event.pointerId); handle.focus({ preventScroll: true });
@@ -107,6 +116,7 @@ function makeTrimHandle(kind, index, edge) {
     if (event.key === 'Escape' && timelineGesture) { event.preventDefault(); finishTimelineGesture(true); return; }
     if (!['ArrowLeft', 'ArrowRight'].includes(event.key) || exporting) return;
     event.preventDefault(); pause(); if (kind === 'video') selected = index;
+    if(kind==='text')window.CortaEditor?.record('recortar texto');
     const original = timelineItemState(kind, index), delta = (event.key === 'ArrowRight' ? 1 : -1) * (event.shiftKey ? .1 : .001);
     applyTimelineValues(kind, index, trimValues(original, kind, edge, delta));
     timelineGesture = { kind, index, edge, handle, original }; finishTimelineGesture();
@@ -121,7 +131,7 @@ function makeTimelineBar(kind, index, name, active = false) {
   button.append(title, detail);
   button.onclick = () => {
     if (kind === 'video') { selected = index; render(); }
-    else $(kind === 'text' ? 'text' : 'musicTrimStart').focus({ preventScroll: false });
+    else {if(kind==='text')selectText(index);$(kind === 'text' ? 'text' : 'musicTrimStart').focus({ preventScroll: false });}
   };
   bar.append(button, makeTrimHandle(kind, index, 'start'), makeTrimHandle(kind, index, 'end'));
   return bar;
@@ -129,7 +139,7 @@ function makeTimelineBar(kind, index, name, active = false) {
 function renderTimeline() {
   if (timelineGesture) return;
   const scale = timelineScale(), total = duration();
-  const textEnd = $('text').value.trim() ? +$('textEnd').value || 0 : 0;
+  const textEnd = Math.max(0,...textClips.map(t=>t.end));
   const audioEnd = music ? (music.timelineStart || 0) + music.end - music.start : 0;
   const seconds = Math.max(total, textEnd, audioEnd, 5) + 1;
   $('timelineContent').style.width = `${Math.max($('timelineScroll').clientWidth, timelineInset + seconds * scale)}px`;
@@ -160,8 +170,14 @@ function renderTimeline() {
     }
   } else audio.textContent = 'Adiciona música para recortar o áudio.';
   const textTrack = $('text-track'); textTrack.className = 'editable-track'; textTrack.replaceChildren();
-  if ($('text').value.trim() && +$('textEnd').value > +$('textStart').value) textTrack.append(makeTimelineBar('text', 0, $('text').value.trim()));
-  else textTrack.textContent = 'Escreve um título para ajustar a duração.';
+  const laneEnds=[];
+  textClips.map((t,index)=>({...t,index})).sort((a,b)=>a.start-b.start).forEach(t=>{
+    let lane=laneEnds.findIndex(end=>end<=t.start);if(lane<0)lane=laneEnds.length;laneEnds[lane]=t.end;
+    const bar=makeTimelineBar('text',t.index,t.text.trim()||'Novo texto',t.index===selectedText);bar.style.top=`${lane*60+5}px`;textTrack.append(bar);
+  });
+  textTrack.style.height=`${Math.max(1,laneEnds.length)*60}px`;
+  textTrack.parentElement.style.height=textTrack.style.height;
+  if(!textClips.length)textTrack.textContent='Usa «Adicionar texto» para criar títulos em vários momentos.';
   layoutTimelineBars();
 }
 function initTimeline() {

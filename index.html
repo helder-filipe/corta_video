@@ -43,6 +43,7 @@
     <div class="precise-controls"><label>Posição exata no filme (s)<input id="preciseTime" type="number" min="0" step="0.001" value="0.000"></label><button id="backMs" type="button">−1 ms</button><button id="forwardMs" type="button">+1 ms</button></div><p id="preciseFeedback" class="hint" role="status">Escolhe um instante às milésimas. A imagem mostra o fotograma disponível nesse instante.</p>
     <div class="timeline-head"><h2>Linha de tempo</h2><div><button id="split">✂ Dividir aqui</button><button id="remove">Eliminar clip</button></div></div>
     <p class="hint timeline-help">Arrasta as pegas nas extremidades para recortar. Clica na régua para posicionar o cursor.</p>
+    <label class="checkbox-label compact"><input id="followPlayhead" type="checkbox" checked> Acompanhar reprodução</label>
     <label class="timeline-zoom">Zoom da linha de tempo <input id="timelineZoom" type="range" min="25" max="160" value="65" step="5"></label>
     <input id="seek" aria-label="Posição na linha de tempo" type="range" min="0" max="0" step="0.001" value="0">
     <div id="timelineScroll" class="timeline-scroll">
@@ -92,6 +93,9 @@
     </section>
     <section>
       <h2>Texto <span>T</span></h2>
+      <div class="two quick-actions"><button id="addText" type="button">+ Adicionar texto</button><button id="removeText" type="button" disabled>Remover texto</button></div>
+      <label>Texto a editar<select id="textList" disabled aria-label="Selecionar texto"></select></label>
+      <p class="text-help">Adiciona um texto na posição do cursor. Cada texto tem tempos e estilo próprios.</p>
       <textarea id="text" placeholder="Escreve o teu título…" rows="2"></textarea>
       <div class="two"><label>De (s)<input id="textStart" type="number" min="0" step="0.001" value="0"></label><label>Até (s)<input id="textEnd" type="number" min="0" step="0.001" value="5"></label></div>
       <div class="two quick-actions"><button id="textStartAtCursor">Iniciar no cursor</button><button id="textEndAtCursor">Terminar no cursor</button></div>

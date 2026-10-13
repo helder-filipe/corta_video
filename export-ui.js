@@ -57,8 +57,8 @@ $('viewResult').onclick = async () => {
 
 $('render').onclick = async () => {
   if (exporting || !clips.length || busy) return;
-  if ($('text').value.trim() && (+$('textEnd').value <= +$('textStart').value)) {
-    $('exportStatus').textContent = 'O fim do texto deve ser posterior ao início.'; return;
+  if (textClips.some(t=>t.text.trim() && (!Number.isFinite(t.start)||!Number.isFinite(t.end)||t.start<0||t.end<=t.start))) {
+    $('exportStatus').textContent = 'Confirma os tempos de todos os textos: o fim deve ser posterior ao início.'; return;
   }
   const format = $('exportFormat').value, fps = +$('fps').value;
   const { width, height } = outputDimensions(+$('resolution').value);

@@ -11,3 +11,7 @@
 ## Reordenação na biblioteca
 
 Biblioteca e timeline usam sempre o mesmo array clips. Recusar reordenações durante exportação ou outra operação ocupada. Não alterar tempos de origem nem duração ao reordenar.
+
+## Textos múltiplos e acompanhamento — 2026-10-13
+
+Textos partilham o relógio do projeto, mantendo estilos e intervalos independentes. Não deslocar automaticamente a timeline em pausa, durante exportação/recorte ou quando Acompanhar reprodução estiver desligado. Validar listas carregadas antes de substituir o estado do projeto.
